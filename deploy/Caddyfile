@@ -1,0 +1,48 @@
+# Reverse proxy avec SSL Let's Encrypt automatique
+# Remplace {$PUBLIC_DOMAIN} par ton domaine (ex: simulateur.scic-lieuxcommuns.fr)
+
+{$PUBLIC_DOMAIN} {
+    # SSL automatique via Let's Encrypt
+    tls {$ADMIN_EMAIL}
+
+    # API vers le backend FastAPI
+    handle /api/* {
+        reverse_proxy backend:8000 {
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Docs OpenAPI
+    handle /docs {
+        reverse_proxy backend:8000
+    }
+    handle /openapi.json {
+        reverse_proxy backend:8000
+    }
+
+    # Reste → frontend Next.js
+    handle {
+        reverse_proxy frontend:3000
+    }
+
+    # Headers de sécurité RGPD
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+        -Server
+    }
+
+    # Logs d'accès (anonymisés)
+    log {
+        output file /data/access.log {
+            roll_size 100mb
+            roll_keep 30
+        }
+        format json
+    }
+}

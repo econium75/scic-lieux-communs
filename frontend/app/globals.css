@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto;
+  --font-serif: Georgia, "Times New Roman", serif;
+}
+
+html, body {
+  background: #fafaf7;
+  color: #1a1f2e;
+  font-family: var(--font-sans);
+}
+
+.kpi-value {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
