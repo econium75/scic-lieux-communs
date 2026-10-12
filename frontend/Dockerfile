@@ -18,7 +18,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup -g 1001 -S nodejs \
     && adduser -S nextjs -u 1001
 
-COPY --from=builder /app/public ./public 2>/dev/null || true
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
@@ -28,7 +27,5 @@ USER nextjs
 EXPOSE 3000
 ENV HOSTNAME="0.0.0.0"
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
-    CMD wget -q -O /dev/null http://localhost:3000 || exit 1
-
-CMD ["npm", "start"]
+# Railway injecte PORT ; Next.js lit PORT nativement
+CMD sh -c "npx next start -H 0.0.0.0 -p ${PORT:-3000}"

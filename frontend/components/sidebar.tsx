@@ -13,10 +13,12 @@ import {
   Calendar,
   Mic,
   UserCog,
+  Upload,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { AuthBadge } from "@/components/auth-badge";
 import { NotificationsBell } from "@/components/notifications-bell";
+import { OperationsSwitcher } from "@/components/operations-switcher";
 
 export async function Sidebar({ activeOperationId }: { activeOperationId?: number }) {
   let operations: Awaited<ReturnType<typeof api.listOperations>> = [];
@@ -36,6 +38,7 @@ export async function Sidebar({ activeOperationId }: { activeOperationId?: numbe
     { href: `/operations/${opId}/bilan-exploitation`, label: "Bilan d'exploitation", icon: Scale },
     { href: `/operations/${opId}/scenarios`, label: "Scénarios", icon: GitBranch },
     { href: `/operations/${opId}/parametres`, label: "Hypothèses opération", icon: Settings2 },
+    { href: `/operations/${opId}/imports`, label: "Imports", icon: Upload },
   ];
   const equipeLinks = [
     { href: "/agenda", label: "Agenda partagé", icon: Calendar },
@@ -61,19 +64,7 @@ export async function Sidebar({ activeOperationId }: { activeOperationId?: numbe
       </div>
 
       <SectionTitle>Opération active</SectionTitle>
-      {active ? (
-        <Link
-          href={`/operations/${active.id}`}
-          className="block px-3 py-2 text-sm rounded-sm bg-white border border-paper-200 hover:border-brand-500 transition"
-        >
-          <div className="font-medium text-ink-900">{active.nom}</div>
-          <div className="text-xs text-ink-500 mt-0.5">
-            {active.commune} · {active.nb_logements_total} logements
-          </div>
-        </Link>
-      ) : (
-        <div className="text-xs text-ink-500 italic">Aucune opération</div>
-      )}
+      <OperationsSwitcher activeOperationId={activeOperationId} />
 
       {opId && (
         <nav className="flex flex-col gap-0.5">

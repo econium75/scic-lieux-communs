@@ -45,14 +45,6 @@ export default async function SynthesePage({ params }: { params: { id: string } 
         </div>
       </div>
 
-      {/* Bandeau démo */}
-      <div className="rounded-sm border border-warn-500/30 bg-warn-50/50 px-4 py-3 flex items-center justify-between mb-6">
-        <div className="text-sm text-ink-700">
-          Données issues du <strong>Modèle de bilan.xls</strong> client (audit 2026-10-09, {bilan.lignes.length} postes).
-          Session 2 — M2 recalibré + M4 commercialisation. Reste à faire : M3, M5, exports fidèles.
-        </div>
-      </div>
-
       {/* Header opération */}
       <div className="mb-6">
         <div className="text-[10px] uppercase tracking-widest text-ink-500">Synthèse de l'opération</div>

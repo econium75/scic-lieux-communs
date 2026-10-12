@@ -45,6 +45,12 @@ export const api = {
   // Opérations
   listOperations: () => fetchJson<Operation[]>("/api/operations"),
   getOperation: (id: number) => fetchJson<Operation>(`/api/operations/${id}`),
+  createOperation: (body: Partial<Operation>) =>
+    fetchJson<Operation>("/api/operations", { method: "POST", body: JSON.stringify(body) }),
+  updateOperation: (id: number, body: Partial<Operation>) =>
+    fetchJson<Operation>(`/api/operations/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  deleteOperation: (id: number) =>
+    fetchJson<{ ok: boolean }>(`/api/operations/${id}`, { method: "DELETE" }),
 
   // Scenarios
   listScenarios: (opId: number) => fetchJson<Scenario[]>(`/api/operations/${opId}/scenarios`),
