@@ -1,8 +1,7 @@
-// Service Worker minimal pour SCIC Lieux Communs PWA
-// Cache les assets statiques et le shell de l'app
-const CACHE_NAME = "scic-v1";
+// Service Worker SCIC Lieux Communs — v2
+// IMPORTANT : ne touche jamais aux requêtes /api/ (laisse le browser faire)
+const CACHE_NAME = "scic-v2";
 const PRECACHE = [
-  "/",
   "/manifest.json",
   "/icon.svg",
   "/icon-192.png",
@@ -19,25 +18,37 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
+      await self.clients.claim();
+    })()
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  // Ne jamais cacher les requêtes API (données dynamiques)
-  if (url.pathname.startsWith("/api/")) return;
-  // Stratégie network-first pour les documents HTML (toujours le dernier)
+
+  // 1. API : ne JAMAIS intercepter, laisser passer directement
+  //    (sinon POST/PUT/DELETE peuvent se faire corrompre par la logique de cache)
+  if (url.pathname.startsWith("/api/")) {
+    return;
+  }
+
+  // 2. On ne cache que les GET
+  if (event.request.method !== "GET") {
+    return;
+  }
+
+  // 3. Navigation HTML : network-first, fallback cache
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request).then((r) => r || caches.match("/")))
     );
     return;
   }
-  // Stratégie cache-first pour le reste (JS, CSS, images)
+
+  // 4. Autres GET statiques : cache-first
   event.respondWith(
     caches.match(event.request).then(
       (cached) =>

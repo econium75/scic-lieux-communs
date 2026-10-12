@@ -35,24 +35,51 @@ export default function AgendaPage() {
   };
   useEffect(() => { reload(); }, []);
 
+  const [err, setErr] = useState<string | null>(null);
   const create = () => {
+    setErr(null);
+    if (!form.titre.trim() || !form.debut) {
+      setErr("Titre et date de début obligatoires");
+      return;
+    }
+    let debutIso: string;
+    let finIso: string | null = null;
+    try {
+      debutIso = new Date(form.debut).toISOString();
+      if (form.fin) finIso = new Date(form.fin).toISOString();
+    } catch {
+      setErr("Format de date invalide");
+      return;
+    }
     start(async () => {
       try {
         await api.createEvent({
           ...form,
-          debut: new Date(form.debut).toISOString(),
-          fin: form.fin ? new Date(form.fin).toISOString() : null,
+          debut: debutIso,
+          fin: finIso,
           participants: form.participants.split(",").map((s) => s.trim()).filter(Boolean),
         });
         setCreating(false);
         setForm({ titre: "", description: "", debut: "", fin: "", type_event: "rdv", lieu: "", participants: "" });
         await reload();
-      } catch (e) { alert(e); }
+      } catch (e) {
+        const msg = String(e);
+        if (msg.includes("401")) setErr("Session expirée. Reconnecte-toi.");
+        else if (msg.includes("403")) setErr("Ton rôle ne permet pas de créer un événement (saisie ou admin requis).");
+        else setErr(`Erreur : ${msg}`);
+      }
     });
   };
   const remove = (id: number) => {
     if (!confirm("Supprimer cet événement ?")) return;
-    start(async () => { await api.deleteEvent(id); await reload(); });
+    start(async () => {
+      try {
+        await api.deleteEvent(id);
+        await reload();
+      } catch (e) {
+        setErr(String(e).includes("401") ? "Session expirée. Reconnecte-toi." : String(e));
+      }
+    });
   };
 
   // Grouper par jour
@@ -111,7 +138,12 @@ export default function AgendaPage() {
             <input placeholder="Participants (usernames, séparés par virgule)" value={form.participants} onChange={(e) => setForm({ ...form, participants: e.target.value })} className="col-span-2 px-2 py-1.5 border border-paper-200 rounded-sm text-sm" />
             <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="col-span-2 px-2 py-1.5 border border-paper-200 rounded-sm text-sm h-16" />
           </div>
-          <button onClick={create} className="mt-3 text-xs px-3 py-1.5 bg-ok-500 text-white rounded-sm">Créer et notifier</button>
+          <div className="mt-3 flex items-center gap-3">
+            <button onClick={create} className="text-xs px-3 py-1.5 bg-ok-500 text-white rounded-sm hover:bg-ok-500/80">
+              Créer et notifier
+            </button>
+            {err && <div className="text-xs text-danger-500">{err}</div>}
+          </div>
         </div>
       )}
 
