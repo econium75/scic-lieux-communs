@@ -30,22 +30,33 @@ const EMPTY: FormState = {
   livraison_cible: "T4 2027",
 };
 
-export function OperationsSwitcher({ activeOperationId }: { activeOperationId?: number }) {
+export function OperationsSwitcher({
+  activeOperationId,
+  initialOperations = [],
+}: {
+  activeOperationId?: number;
+  initialOperations?: Operation[];
+}) {
   const router = useRouter();
-  const [operations, setOperations] = useState<Operation[]>([]);
+  const [operations, setOperations] = useState<Operation[]>(initialOperations);
   const [open, setOpen] = useState(false);
   const [modal, setModal] = useState<"create" | "edit" | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY);
   const [editId, setEditId] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const canEdit = typeof window !== "undefined" && !!getUser();
+  // On vérifie l'auth seulement après mount pour éviter le flash SSR
+  const isLogged = mounted && !!getUser();
 
   const reload = async () => {
     try { setOperations(await api.listOperations()); } catch {}
   };
-  useEffect(() => { reload(); }, []);
+  useEffect(() => {
+    setMounted(true);
+    reload();
+  }, []);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -58,6 +69,10 @@ export function OperationsSwitcher({ activeOperationId }: { activeOperationId?: 
   const active = operations.find((o) => o.id === activeOperationId) || operations[0] || null;
 
   const openCreate = () => {
+    if (!isLogged) {
+      router.push("/login");
+      return;
+    }
     setForm(EMPTY);
     setEditId(null);
     setErr(null);
@@ -121,11 +136,12 @@ export function OperationsSwitcher({ activeOperationId }: { activeOperationId?: 
         <div className="text-xs text-ink-500 italic px-3 py-2 border border-dashed border-paper-200 rounded-sm">
           Aucune opération
         </div>
-        {canEdit && (
-          <button onClick={openCreate} className="w-full text-xs px-3 py-1.5 bg-brand-500 text-white rounded-sm hover:bg-brand-700 flex items-center gap-2 justify-center">
-            <Plus size={12} /> Créer une opération
-          </button>
-        )}
+        <button
+          onClick={openCreate}
+          className="w-full text-xs px-3 py-2 bg-brand-500 text-white rounded-sm hover:bg-brand-700 flex items-center gap-2 justify-center"
+        >
+          <Plus size={13} /> {isLogged ? "Créer une opération" : "Se connecter pour créer"}
+        </button>
         {modal && <Modal title={modal === "create" ? "Nouvelle opération" : "Modifier l'opération"} form={form} setForm={setForm} save={save} close={() => setModal(null)} err={err} saving={saving} />}
       </div>
     );
@@ -166,19 +182,26 @@ export function OperationsSwitcher({ activeOperationId }: { activeOperationId?: 
               {op.id === active.id && <Check size={12} className="text-ok-500 shrink-0" />}
             </button>
           ))}
-          {canEdit && (
-            <div className="border-t border-paper-200 p-2 space-y-1 bg-paper-50/50">
-              <button onClick={openCreate} className="w-full px-2 py-1.5 text-xs bg-brand-500 text-white rounded-sm hover:bg-brand-700 flex items-center gap-2 justify-center">
-                <Plus size={11} /> Nouvelle opération
-              </button>
-              <button onClick={openEdit} className="w-full px-2 py-1.5 text-xs border border-paper-200 bg-white text-ink-700 rounded-sm hover:bg-paper-100 flex items-center gap-2 justify-center">
-                <Pencil size={11} /> Modifier {active.nom.length > 20 ? "l'opération" : active.nom}
-              </button>
-              <button onClick={remove} className="w-full px-2 py-1.5 text-xs border border-paper-200 bg-white text-ink-500 hover:text-danger-500 rounded-sm hover:bg-paper-100 flex items-center gap-2 justify-center">
-                <Trash2 size={11} /> Supprimer
-              </button>
-            </div>
-          )}
+          <div className="border-t border-paper-200 p-2 space-y-1 bg-paper-50/50">
+            <button onClick={openCreate} className="w-full px-2 py-1.5 text-xs bg-brand-500 text-white rounded-sm hover:bg-brand-700 flex items-center gap-2 justify-center">
+              <Plus size={11} /> Nouvelle opération
+            </button>
+            {isLogged && (
+              <>
+                <button onClick={openEdit} className="w-full px-2 py-1.5 text-xs border border-paper-200 bg-white text-ink-700 rounded-sm hover:bg-paper-100 flex items-center gap-2 justify-center">
+                  <Pencil size={11} /> Modifier {active.nom.length > 20 ? "l'opération" : active.nom}
+                </button>
+                <button onClick={remove} className="w-full px-2 py-1.5 text-xs border border-paper-200 bg-white text-ink-500 hover:text-danger-500 rounded-sm hover:bg-paper-100 flex items-center gap-2 justify-center">
+                  <Trash2 size={11} /> Supprimer
+                </button>
+              </>
+            )}
+            {!isLogged && (
+              <div className="text-[10px] text-ink-500 italic text-center py-1">
+                Connectez-vous pour modifier
+              </div>
+            )}
+          </div>
         </div>
       )}
 

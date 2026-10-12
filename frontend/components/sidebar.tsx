@@ -64,7 +64,7 @@ export async function Sidebar({ activeOperationId }: { activeOperationId?: numbe
       </div>
 
       <SectionTitle>Opération active</SectionTitle>
-      <OperationsSwitcher activeOperationId={activeOperationId} />
+      <OperationsSwitcher activeOperationId={activeOperationId} initialOperations={operations} />
 
       {opId && (
         <nav className="flex flex-col gap-0.5">

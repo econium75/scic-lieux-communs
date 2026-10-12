@@ -63,8 +63,8 @@ export function CommercialisationClient({
 
       <div className="grid grid-cols-12 gap-6">
         {/* Table ménages */}
-        <div className="col-span-7 rounded-sm border border-paper-200 bg-white overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="col-span-12 xl:col-span-8 rounded-sm border border-paper-200 bg-white overflow-x-auto">
+          <table className="w-full text-sm min-w-[720px]">
             <thead>
               <tr className="text-[10px] uppercase tracking-widest text-ink-500 bg-paper-50">
                 <th className="text-left px-4 py-2 font-medium">Réf.</th>
@@ -114,7 +114,7 @@ export function CommercialisationClient({
         </div>
 
         {/* Détail ménage sélectionné */}
-        <div className="col-span-5">
+        <div className="col-span-12 xl:col-span-4">
           {selected?.qualification ? (
             <MenageDetail row={selected} />
           ) : (
