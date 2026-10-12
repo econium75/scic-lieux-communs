@@ -20,7 +20,7 @@ export default async function SynthesePage({ params }: { params: { id: string } 
   const pli = bilan.sous_bilans.find((s) => s.volet === "PLI");
 
   return (
-    <div className="px-10 py-8">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
       {/* Barre d'action haute */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2 text-xs text-ink-500">
@@ -49,15 +49,15 @@ export default async function SynthesePage({ params }: { params: { id: string } 
       {/* Header opération */}
       <div className="mb-6">
         <div className="text-[10px] uppercase tracking-widest text-ink-500">Synthèse de l'opération</div>
-        <h1 className="font-serif text-3xl text-ink-900 mt-1">{operation.nom}</h1>
+        <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">{operation.nom}</h1>
         <p className="text-sm text-ink-500 mt-1">
           {operation.commune} · Zone BRS {operation.zone_brs} · Livraison {operation.livraison_cible}
         </p>
       </div>
 
       {/* Description + alertes */}
-      <div className="grid grid-cols-5 gap-4 mb-6">
-        <div className="col-span-3 rounded-sm border border-paper-200 bg-white p-5">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+        <div className="lg:col-span-3 rounded-sm border border-paper-200 bg-white p-5">
           <div className="text-[10px] uppercase tracking-widest text-ink-500">Description</div>
           <p className="text-sm text-ink-700 mt-2 leading-relaxed">
             Opération mixte de {bilan.nb_logements_total} logements : {bilan.nb_logements_brs} BRS accession sociale +{" "}
@@ -73,7 +73,7 @@ export default async function SynthesePage({ params }: { params: { id: string } 
         </div>
 
         {/* Alertes */}
-        <div className="col-span-2 rounded-sm border border-paper-200 bg-white overflow-hidden">
+        <div className="lg:col-span-2 rounded-sm border border-paper-200 bg-white overflow-hidden">
           <div className="px-4 py-3 border-b border-paper-200 flex items-center justify-between">
             <div className="text-[10px] uppercase tracking-widest text-ink-500">Alertes</div>
             <AlerteCount alertes={bilan.alertes} />
@@ -87,7 +87,7 @@ export default async function SynthesePage({ params }: { params: { id: string } 
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
         <KpiCard
           label="Prix de revient HT"
           value={formatEuro(bilan.prix_revient_ht_total, { compact: true })}

@@ -61,7 +61,7 @@ export function ReferentielsClient({ initial }: { initial: Ref[] }) {
 
   if (refs.length === 0) {
     return (
-      <div className="px-10 py-8">
+      <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
         <div className="rounded-sm border border-paper-200 bg-white p-6 text-sm text-ink-500">
           Backend injoignable ou aucun référentiel.
         </div>
@@ -70,9 +70,9 @@ export function ReferentielsClient({ initial }: { initial: Ref[] }) {
   }
 
   return (
-    <div className="px-10 py-8 max-w-5xl">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-5xl">
       <div className="text-[10px] uppercase tracking-widest text-ink-500">M1 — Référentiels globaux</div>
-      <h1 className="font-serif text-3xl text-ink-900 mt-1 mb-2">Paramètres</h1>
+      <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1 mb-2">Paramètres</h1>
       <p className="text-sm text-ink-500 mb-6">
         Référentiels partagés par toutes les opérations. L'édition est persistée en base.
       </p>

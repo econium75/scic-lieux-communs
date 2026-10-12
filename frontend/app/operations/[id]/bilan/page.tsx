@@ -30,11 +30,11 @@ export default async function BilanPage({ params }: { params: { id: string } }) 
   const pli = bilan.sous_bilans.find((s) => s.volet === "PLI");
 
   return (
-    <div className="px-10 py-8">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-ink-500">M2 — Bilan d'opération promoteur</div>
-          <h1 className="font-serif text-3xl text-ink-900 mt-1">{bilan.nom}</h1>
+          <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">{bilan.nom}</h1>
           <p className="text-sm text-ink-500 mt-1">
             {bilan.commune} · Livraison {bilan.livraison_cible} · {bilan.nb_logements_total} lgts ·
             SHAB {formatNumber(bilan.shab_total_m2)} m² · SDP {formatNumber(bilan.sdp_total_m2)} m²

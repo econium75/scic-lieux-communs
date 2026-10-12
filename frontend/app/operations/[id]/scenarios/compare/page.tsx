@@ -16,7 +16,7 @@ export default async function ComparePage({
   const b = Number(searchParams.b);
   if (!a || !b || a === b) {
     return (
-      <div className="px-10 py-8">
+      <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
         <p className="text-sm text-ink-500">URL invalide — attendue : ?a=ID1&amp;b=ID2</p>
         <Link href={`/operations/${opId}/scenarios`} className="text-brand-500 underline text-sm">
           ← Retour
@@ -29,7 +29,7 @@ export default async function ComparePage({
   const [sa, sb] = data.scenarios;
 
   if (!sa || !sb) {
-    return <div className="px-10 py-8">Scénarios introuvables.</div>;
+    return <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">Scénarios introuvables.</div>;
   }
 
   const delta = (va: number, vb: number) => vb - va;
@@ -40,7 +40,7 @@ export default async function ComparePage({
   };
 
   return (
-    <div className="px-10 py-8">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
       <div className="flex items-start justify-between mb-6">
         <div>
           <Link
@@ -52,7 +52,7 @@ export default async function ComparePage({
           <div className="text-[10px] uppercase tracking-widest text-ink-500">
             M5 — Comparaison côte-à-côte
           </div>
-          <h1 className="font-serif text-3xl text-ink-900 mt-1">
+          <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">
             {sa.nom} <span className="text-ink-500 font-sans text-lg">vs</span> {sb.nom}
           </h1>
         </div>

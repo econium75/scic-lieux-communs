@@ -45,7 +45,7 @@ export function AuditClient({ initial, actions }: { initial: AuditData | null; a
 
   if (!data) {
     return (
-      <div className="px-10 py-8">
+      <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
         <div className="rounded-sm border border-paper-200 bg-white p-6 text-sm text-ink-500">
           Backend injoignable.
         </div>
@@ -54,11 +54,11 @@ export function AuditClient({ initial, actions }: { initial: AuditData | null; a
   }
 
   return (
-    <div className="px-10 py-8">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-ink-500">M7 — Journal d'audit</div>
-          <h1 className="font-serif text-3xl text-ink-900 mt-1">Historique des opérations</h1>
+          <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Historique des opérations</h1>
           <p className="text-sm text-ink-500 mt-1">
             Traçabilité des calculs, modifications et exports — essentielle pour les financeurs et ANRU.
           </p>

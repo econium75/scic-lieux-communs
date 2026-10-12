@@ -8,9 +8,9 @@ export default async function DonneesExportsPage() {
   } catch {}
 
   return (
-    <div className="px-10 py-8 max-w-5xl">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-5xl">
       <div className="text-[10px] uppercase tracking-widest text-ink-500">M6 — Restitutions</div>
-      <h1 className="font-serif text-3xl text-ink-900 mt-1 mb-2">Données & exports</h1>
+      <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1 mb-2">Données & exports</h1>
       <p className="text-sm text-ink-500 mb-6">
         Génération à la volée des gabarits Excel formatés et des PDF de synthèse pour comité d'engagement.
       </p>

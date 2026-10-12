@@ -64,13 +64,13 @@ export default function AgendaPage() {
   const days = Object.keys(byDay).sort();
 
   return (
-    <div className="px-10 py-8 max-w-5xl">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-5xl">
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-ink-500 flex items-center gap-2">
             <Calendar size={11} /> Agenda partagé
           </div>
-          <h1 className="font-serif text-3xl text-ink-900 mt-1">Calendrier équipe</h1>
+          <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Calendrier équipe</h1>
           <p className="text-sm text-ink-500 mt-1">COPIL, COPROJ, jalons, rendez-vous et deadlines — partagés entre tous les utilisateurs.</p>
         </div>
         <div className="flex items-center gap-2">

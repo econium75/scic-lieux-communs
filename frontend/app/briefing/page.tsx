@@ -67,7 +67,7 @@ export default function BriefingPage() {
   if (!mounted) return null;
   if (!getUser()) {
     return (
-      <div className="px-10 py-8">
+      <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
         <div className="rounded-sm border border-paper-200 bg-white p-6 text-sm text-ink-500">
           Connecte-toi pour consulter ton briefing personnel.
           <a href="/login" className="text-brand-500 underline ml-1">Se connecter →</a>
@@ -77,13 +77,13 @@ export default function BriefingPage() {
   }
 
   return (
-    <div className="px-10 py-8 max-w-5xl">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-5xl">
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-ink-500 flex items-center gap-2">
             <Mic size={11} /> Briefing podcast
           </div>
-          <h1 className="font-serif text-3xl text-ink-900 mt-1">Votre briefing quotidien</h1>
+          <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Votre briefing quotidien</h1>
           <p className="text-sm text-ink-500 mt-1">
             Généré à partir de vos rendez-vous, notifications, phases en cours et activité récente.
             Audio en français synthétisé (gTTS).
@@ -105,7 +105,7 @@ export default function BriefingPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-6">
         {/* Player + script */}
         <div className="col-span-8">
           {selected ? (

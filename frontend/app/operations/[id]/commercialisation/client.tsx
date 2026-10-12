@@ -23,13 +23,13 @@ export function CommercialisationClient({
   const [importOpen, setImportOpen] = useState(false);
 
   return (
-    <div className="px-10 py-8">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
       <div className="mb-6 flex items-start justify-between">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-ink-500">
             M4 — Commercialisation BRS
           </div>
-          <h1 className="font-serif text-3xl text-ink-900 mt-1">Qualification des ménages</h1>
+          <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Qualification des ménages</h1>
           <p className="text-sm text-ink-500 mt-1">
             Décile FiLoSoFi · Décote BRS · Subvention ANRU · Plan PTZ+PC · Taux d'effort · Reste à vivre
           </p>
@@ -61,9 +61,9 @@ export function CommercialisationClient({
         onSuccess={() => setTimeout(() => router.refresh(), 1500)}
       />
 
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-6">
         {/* Table ménages */}
-        <div className="col-span-12 xl:col-span-8 rounded-sm border border-paper-200 bg-white overflow-x-auto">
+        <div className="col-span-12 xl:xl:col-span-8 col-span-12 rounded-sm border border-paper-200 bg-white overflow-x-auto">
           <table className="w-full text-sm min-w-[720px]">
             <thead>
               <tr className="text-[10px] uppercase tracking-widest text-ink-500 bg-paper-50">
@@ -237,7 +237,7 @@ function PreviewForm() {
   );
 
   return (
-    <div className="grid grid-cols-12 gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-6">
       <div className="col-span-5 rounded-sm border border-paper-200 bg-white p-5">
         <div className="grid grid-cols-2 gap-3">
           {field("Référence", "reference", "text")}

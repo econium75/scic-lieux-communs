@@ -22,10 +22,10 @@ export function ImportsClient({
   const [nomScenario, setNomScenario] = useState("Scénario importé Excel");
 
   return (
-    <div className="px-10 py-8 max-w-5xl">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-5xl">
       <div className="mb-6">
         <div className="text-[10px] uppercase tracking-widest text-ink-500">Imports</div>
-        <h1 className="font-serif text-3xl text-ink-900 mt-1">Importer des données</h1>
+        <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Importer des données</h1>
         <p className="text-sm text-ink-500 mt-1">
           Centralise tous les imports pour l'opération <strong>{operationNom}</strong> :
           ménages, bilan M2, agenda iCal, pièces jointes, référentiels globaux.

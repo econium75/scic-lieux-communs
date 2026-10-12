@@ -36,7 +36,7 @@ export default function AdminUsersPage() {
 
   if (me && me.role !== "admin") {
     return (
-      <div className="px-10 py-8">
+      <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
         <div className="rounded-sm border border-danger-500/30 bg-danger-50 p-6 text-sm text-ink-700">
           Cette page est réservée aux administrateurs. Votre rôle actuel : <strong>{me.role}</strong>.
         </div>
@@ -45,7 +45,7 @@ export default function AdminUsersPage() {
   }
   if (!me) {
     return (
-      <div className="px-10 py-8">
+      <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
         <div className="rounded-sm border border-paper-200 bg-white p-6 text-sm text-ink-500">
           Vous devez vous connecter. Rendez-vous sur <a href="/login" className="text-brand-500 underline">/login</a>.
         </div>
@@ -80,11 +80,11 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="px-10 py-8 max-w-5xl">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-5xl">
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-ink-500">Administration</div>
-          <h1 className="font-serif text-3xl text-ink-900 mt-1">Utilisateurs & autorisations</h1>
+          <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Utilisateurs & autorisations</h1>
           <p className="text-sm text-ink-500 mt-1">
             3 rôles : <strong>admin</strong> (tout) · <strong>saisie</strong> (CRUD + exports) · <strong>lecture</strong> (lecture + exports).
           </p>

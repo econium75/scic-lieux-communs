@@ -59,11 +59,11 @@ export function SensibiliteClient({
   }, [selected]);
 
   return (
-    <div className="px-10 py-8">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-ink-500">M5 — Analyse de sensibilité</div>
-          <h1 className="font-serif text-3xl text-ink-900 mt-1">Impact d'un paramètre sur les KPIs</h1>
+          <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Impact d'un paramètre sur les KPIs</h1>
           <p className="text-sm text-ink-500 mt-1">
             Scénario de base : <strong>{scenarioNom}</strong> · Les variations ne modifient pas le scénario stocké.
           </p>

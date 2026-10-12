@@ -96,11 +96,11 @@ export function ParametresClient({ opId, scenario }: { opId: number; scenario: S
   };
 
   return (
-    <div className="px-10 py-8 max-w-6xl">
+    <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-6xl">
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-ink-500">M1 — Hypothèses du scénario</div>
-          <h1 className="font-serif text-3xl text-ink-900 mt-1">Paramètres opération</h1>
+          <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Paramètres opération</h1>
           <p className="text-sm text-ink-500 mt-1">
             Édition des hypothèses du scénario <strong>{scenario.nom}</strong>. La sauvegarde invalide
             les calculs M2/M3 — ils seront recalculés au prochain affichage.
