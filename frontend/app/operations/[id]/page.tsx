@@ -14,6 +14,7 @@ export default async function SynthesePage({ params }: { params: { id: string } 
   const scenarios = await api.listScenarios(opId);
   const scenario = scenarios.find((s) => s.is_reference) || scenarios[0];
   const bilan = await api.calculerBilan(scenario.id);
+  const exploit = await api.calculerExploitation(scenario.id).catch(() => null);
 
   const brs = bilan.sous_bilans.find((s) => s.volet === "BRS");
   const pli = bilan.sous_bilans.find((s) => s.volet === "PLI");
@@ -125,11 +126,13 @@ export default async function SynthesePage({ params }: { params: { id: string } 
       <div className="rounded-sm border border-paper-200 bg-white p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="text-[10px] uppercase tracking-widest text-ink-500">
-            Exploitation locative — projection 40 ans (M3)
+            Exploitation locative — projection {exploit?.duree_projection_ans ?? 40} ans (M3)
           </div>
-          <span className="text-[11px] text-ink-500 italic">Illustratif — moteur M3 prévu session 3</span>
+          <Link href={`/operations/${opId}/exploitation`} className="text-[11px] text-brand-500 hover:underline">
+            Détail compte d'exploitation →
+          </Link>
         </div>
-        <CashflowChart />
+        <CashflowChart annees={exploit?.annees} />
       </div>
     </div>
   );

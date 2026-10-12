@@ -1,18 +1,34 @@
 "use client";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Legend,
+  ReferenceLine,
+} from "recharts";
+import type { AnneeExploitation } from "@/lib/types";
 
-// Jeu de données illustratif — M3 réel prévu session 3
-const data = Array.from({ length: 40 }, (_, i) => {
-  const an = i + 1;
-  return {
-    an: `An ${an}`,
-    loyer_brut: 200000 + an * 3500,
-    resultat_tresorerie: 90000 - an * 1500 + (an > 15 ? (an - 15) * 2200 : 0),
-    cumul_tresorerie: -50000 + an * 12000,
-  };
-});
+export function CashflowChart({ annees }: { annees?: AnneeExploitation[] }) {
+  // Si l'exploitation M3 n'est pas calculable, on affiche un placeholder
+  if (!annees || annees.length === 0) {
+    return (
+      <div className="h-[240px] rounded-sm border border-dashed border-paper-200 bg-paper-50/50 flex items-center justify-center text-xs text-ink-500 italic">
+        Exploitation locative non calculable — édite les hypothèses M3.
+      </div>
+    );
+  }
 
-export function CashflowChart() {
+  const data = annees.map((a) => ({
+    an: `An ${a.annee_num}`,
+    loyer: a.loyers_nets,
+    resultat: a.resultat_tresorerie,
+    cumul: a.cumul_tresorerie,
+  }));
+
   return (
     <div style={{ width: "100%", height: 240 }}>
       <ResponsiveContainer>
@@ -23,6 +39,7 @@ export function CashflowChart() {
             tick={{ fontSize: 10, fill: "#6b7390" }}
             tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
           />
+          <ReferenceLine y={0} stroke="#a8adc1" strokeDasharray="2 2" />
           <Tooltip
             formatter={(v: number) =>
               new Intl.NumberFormat("fr-FR", {
@@ -34,9 +51,9 @@ export function CashflowChart() {
             contentStyle={{ fontSize: 11 }}
           />
           <Legend wrapperStyle={{ fontSize: 11 }} />
-          <Line type="monotone" dataKey="loyer_brut" name="Loyer brut" stroke="#2e7d32" dot={false} strokeWidth={1.5} />
-          <Line type="monotone" dataKey="resultat_tresorerie" name="Rés. trésorerie annuel" stroke="#2a5aa0" dot={false} strokeWidth={1.5} />
-          <Line type="monotone" dataKey="cumul_tresorerie" name="Cumul trésorerie" stroke="#d97706" dot={false} strokeWidth={1.5} strokeDasharray="4 4" />
+          <Line type="monotone" dataKey="loyer" name="Loyers nets" stroke="#2e7d32" dot={false} strokeWidth={1.5} />
+          <Line type="monotone" dataKey="resultat" name="Résultat trésorerie annuel" stroke="#2a5aa0" dot={false} strokeWidth={1.5} />
+          <Line type="monotone" dataKey="cumul" name="Cumul trésorerie" stroke="#d97706" dot={false} strokeWidth={2} />
         </LineChart>
       </ResponsiveContainer>
     </div>
