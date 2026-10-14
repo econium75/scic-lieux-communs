@@ -85,6 +85,7 @@ def create_event(
         user=user.username, payload={"titre": e.titre, "debut": e.debut.isoformat()},
     ))
     session.commit()
+    session.refresh(e)
     return e
 
 

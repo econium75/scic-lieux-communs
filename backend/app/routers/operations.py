@@ -85,6 +85,7 @@ def create_operation(
         user=user.username, payload={"code": op.code, "nom": op.nom},
     ))
     session.commit()
+    session.refresh(op)
     return op
 
 
