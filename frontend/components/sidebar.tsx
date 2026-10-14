@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { Sliders, ArrowLeftRight, FileClock, Calendar, Mic, UserCog } from "lucide-react";
+import { Sliders, ArrowLeftRight, FileClock } from "lucide-react";
 import { api } from "@/lib/api";
 import { AuthBadge } from "@/components/auth-badge";
+import { EquipeNav } from "@/components/equipe-nav";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { SidebarOperation } from "@/components/sidebar-operation";
 
@@ -14,11 +15,6 @@ export async function Sidebar() {
     // backend offline — sidebar still renders
   }
 
-  const equipeLinks = [
-    { href: "/agenda", label: "Agenda partagé", icon: Calendar },
-    { href: "/briefing", label: "Briefing podcast", icon: Mic },
-    { href: "/admin/users", label: "Utilisateurs", icon: UserCog },
-  ];
   const referentielLinks = [
     { href: "/parametres", label: "Barèmes & paramètres", icon: Sliders },
     { href: "/donnees-exports", label: "Données & exports", icon: ArrowLeftRight },
@@ -41,12 +37,7 @@ export async function Sidebar() {
         <SidebarOperation operations={operations} />
       </Suspense>
 
-      <nav className="flex flex-col gap-0.5">
-        <SectionTitle>Équipe</SectionTitle>
-        {equipeLinks.map((link) => (
-          <NavLink key={link.href} {...link} />
-        ))}
-      </nav>
+      <EquipeNav dense />
 
       <nav className="flex flex-col gap-0.5">
         <SectionTitle>Référentiels</SectionTitle>

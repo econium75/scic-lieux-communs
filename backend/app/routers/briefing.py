@@ -85,6 +85,24 @@ def _build_script(session: Session, user: User, jour: date) -> tuple[str, str]:
         for n in notifs_unread[:3]:
             parts.append(f"{n.titre}.")
 
+    # Tâches reçues à traiter
+    from ..models import Tache
+    taches = list(session.exec(
+        select(Tache).where(Tache.destinataire == user.username).where(Tache.statut == "a_faire")
+    ).all())
+    if taches:
+        en_retard = [t for t in taches if t.echeance and t.echeance.replace(tzinfo=timezone.utc) < debut]
+        a_signer = [t for t in taches if t.type_tache == "signature"]
+        phrase = f"Vous avez {len(taches)} tâche{'s' if len(taches) > 1 else ''} à traiter"
+        if en_retard:
+            phrase += f", dont {len(en_retard)} en retard"
+        parts.append(phrase + ".")
+        if a_signer:
+            parts.append(f"{len(a_signer)} document{'s' if len(a_signer) > 1 else ''} attend{'ent' if len(a_signer) > 1 else ''} votre signature.")
+        for t in sorted(taches, key=lambda x: x.echeance or datetime.max)[:3]:
+            ech = f", à rendre le {t.echeance.strftime('%d/%m')}" if t.echeance else ""
+            parts.append(f"{t.type_tache.capitalize()} demandée par {t.emetteur} : {t.titre}{ech}.")
+
     if phases_resp:
         parts.append(f"En tant que responsable, vous suivez {len(phases_resp)} phase{'s' if len(phases_resp) > 1 else ''} actuellement.")
         for p in phases_resp[:3]:

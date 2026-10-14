@@ -8,6 +8,8 @@ numpy-financial==1.0.0
 pandas==2.2.3
 openpyxl==3.1.5
 reportlab==4.2.5
+pypdf>=5.0
+pypdfium2>=4.30
 python-multipart==0.0.12
 python-jose[cryptography]>=3.3.0
 bcrypt>=4.0.0

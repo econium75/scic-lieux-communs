@@ -22,6 +22,8 @@ from .routers import (
     attachments,
     imports,
     simulations,
+    documents,
+    taches,
 )
 
 
@@ -76,6 +78,8 @@ app.include_router(briefing.router, prefix="/api/briefing", tags=["Briefing podc
 app.include_router(attachments.router, prefix="/api/attachments", tags=["Pièces jointes"])
 app.include_router(imports.router, prefix="/api/imports", tags=["Imports batch"])
 app.include_router(simulations.router, prefix="/api/simulations", tags=["Simulateur 8 onglets"])
+app.include_router(documents.router, prefix="/api/documents", tags=["Porte-documents"])
+app.include_router(taches.router, prefix="/api/taches", tags=["Tâches"])
 
 
 @app.get("/api/health")

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from ..db import get_session
 from ..models import User, AuditLog
-from ..auth import hash_password, require_admin
+from ..auth import hash_password, require_admin, get_current_user
 
 router = APIRouter()
 
@@ -42,6 +42,18 @@ def list_users(
 ) -> list[UserPublic]:
     rows = session.exec(select(User)).all()
     return [UserPublic(**u.model_dump()) for u in rows]
+
+
+@router.get("/annuaire")
+def annuaire(
+    session: Session = Depends(get_session),
+    user: User | None = Depends(get_current_user),
+) -> list[dict]:
+    """Liste des utilisateurs actifs (pour attribuer une tâche, inviter, partager) — tout utilisateur connecté."""
+    if not user:
+        raise HTTPException(401, "Authentification requise")
+    rows = session.exec(select(User).where(User.actif == True)).all()  # noqa: E712
+    return [{"username": u.username, "nom_affichage": u.nom_affichage or u.username, "role": u.role} for u in rows]
 
 
 @router.post("")

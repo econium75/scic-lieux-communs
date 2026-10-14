@@ -163,6 +163,83 @@ class Attachment(SQLModel, table=True):
     uploaded_at: datetime = Field(default_factory=_utcnow, index=True)
 
 
+class Document(SQLModel, table=True):
+    """Porte-documents : un document appartient à un utilisateur et peut être partagé."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    titre: str
+    nom_fichier: str
+    mimetype: str = Field(default="application/pdf")
+    proprietaire: str = Field(index=True)  # username
+    dossier: str = Field(default="Général")
+    description: str = Field(default="")
+    operation_id: Optional[int] = Field(default=None, foreign_key="operation.id", index=True)
+    partage_avec: list = Field(default_factory=list, sa_column=Column(JSON))  # [usernames]
+    version_courante: int = Field(default=1)
+    statut: str = Field(default="brouillon")  # brouillon | signe
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
+class DocumentVersion(SQLModel, table=True):
+    """Chaque modification (annotation, signature, nouvel import) crée une version ; rien n'est écrasé."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    document_id: int = Field(foreign_key="document.id", index=True)
+    numero: int
+    chemin: str  # relatif à data/documents/
+    taille: int = 0
+    sha256: str = ""
+    nb_pages: int = 0
+    auteur: str = ""
+    commentaire: str = ""
+    created_at: datetime = Field(default_factory=_utcnow)
+
+
+class SignatureDocument(SQLModel, table=True):
+    """Journal de signature (preuve : qui, quand, empreinte du fichier signé)."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    document_id: int = Field(foreign_key="document.id", index=True)
+    version_numero: int
+    signataire: str = Field(index=True)
+    nom_affichage: str = ""
+    signed_at: datetime = Field(default_factory=_utcnow)
+    sha256: str = ""
+    ip: str = ""
+    pages: list = Field(default_factory=list, sa_column=Column(JSON))
+    tache_id: Optional[int] = None
+
+
+class SignatureUtilisateur(SQLModel, table=True):
+    """Signature manuscrite enregistrée par l'utilisateur (image PNG en data URL)."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(index=True, unique=True)
+    image: str  # data:image/png;base64,...
+    paraphe: str = Field(default="")
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
+class Tache(SQLModel, table=True):
+    """Tâche envoyée à un utilisateur : validation, consultation, signature ou autre."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    type_tache: str = Field(default="validation")  # validation | consultation | signature | autre
+    titre: str
+    description: str = Field(default="")
+    emetteur: str = Field(index=True)
+    destinataire: str = Field(index=True)
+    groupe: str = Field(default="", index=True)  # même envoi à plusieurs destinataires
+    statut: str = Field(default="a_faire", index=True)  # a_faire | terminee | refusee | annulee
+    priorite: str = Field(default="normale")  # normale | haute | urgente
+    echeance: Optional[datetime] = None
+    operation_id: Optional[int] = Field(default=None, foreign_key="operation.id")
+    document_id: Optional[int] = Field(default=None, foreign_key="document.id")
+    reponse: str = Field(default="")  # validee | refusee | consultee | signee | faite
+    commentaire_reponse: str = Field(default="")
+    vue_at: Optional[datetime] = None
+    terminee_at: Optional[datetime] = None
+    rappel_retard_envoye: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
 class Briefing(SQLModel, table=True):
     """Briefing quotidien personnalisé (texte + lien audio)."""
     id: Optional[int] = Field(default=None, primary_key=True)

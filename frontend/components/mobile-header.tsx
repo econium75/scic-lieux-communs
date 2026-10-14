@@ -3,10 +3,11 @@ import { useState, useEffect, Suspense } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { Sliders, ArrowLeftRight, FileClock, Calendar, Mic, UserCog } from "lucide-react";
+import { Sliders, ArrowLeftRight, FileClock } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Operation } from "@/lib/types";
 import { SidebarOperation } from "@/components/sidebar-operation";
+import { EquipeNav } from "@/components/equipe-nav";
 import { AuthBadge } from "@/components/auth-badge";
 import { NotificationsBell } from "@/components/notifications-bell";
 
@@ -26,11 +27,6 @@ export function MobileHeader() {
     api.listOperations().then(setOperations).catch(() => {});
   }, []);
 
-  const equipeLinks = [
-    { href: "/agenda", label: "Agenda partagé", icon: Calendar },
-    { href: "/briefing", label: "Briefing podcast", icon: Mic },
-    { href: "/admin/users", label: "Utilisateurs", icon: UserCog },
-  ];
   const refLinks = [
     { href: "/parametres", label: "Barèmes & paramètres", icon: Sliders },
     { href: "/donnees-exports", label: "Données & exports", icon: ArrowLeftRight },
@@ -53,7 +49,7 @@ export function MobileHeader() {
           </div>
           <div className="font-serif font-bold text-ink-900 text-sm">Lieux Communs</div>
         </div>
-        <div className="w-8" />
+        <NotificationsBell variante="entete" />
       </header>
 
       {open && (
@@ -92,15 +88,7 @@ export function MobileHeader() {
                 <SidebarOperation operations={operations} />
               </Suspense>
 
-              <nav className="flex flex-col gap-0.5">
-                <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium mb-1">Équipe</div>
-                {equipeLinks.map((l) => (
-                  <Link key={l.href} href={l.href} className="flex items-center gap-2.5 px-2 py-2 text-sm text-ink-700 rounded-sm hover:bg-paper-100">
-                    <l.icon size={15} className="text-ink-500 shrink-0" />
-                    <span>{l.label}</span>
-                  </Link>
-                ))}
-              </nav>
+              <EquipeNav />
 
               <nav className="flex flex-col gap-0.5">
                 <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium mb-1">Référentiels</div>
@@ -113,7 +101,6 @@ export function MobileHeader() {
               </nav>
 
               <div className="mt-auto border-t border-paper-200 pt-3 space-y-1">
-                <NotificationsBell />
                 <AuthBadge />
               </div>
             </div>
