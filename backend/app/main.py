@@ -25,6 +25,7 @@ from .routers import (
     documents,
     taches,
     projet,
+    accueil,
 )
 
 
@@ -83,6 +84,7 @@ app.include_router(simulations.router, prefix="/api/simulations", tags=["Simulat
 app.include_router(documents.router, prefix="/api/documents", tags=["Porte-documents"])
 app.include_router(taches.router, prefix="/api/taches", tags=["Tâches"])
 app.include_router(projet.router, prefix="/api/projet", tags=["Gestion de projet"])
+app.include_router(accueil.router, prefix="/api/accueil", tags=["Ma journée"])
 
 
 @app.get("/api/health")

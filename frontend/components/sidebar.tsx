@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { AuthBadge } from "@/components/auth-badge";
 import { EquipeNav } from "@/components/equipe-nav";
 import { Brand } from "@/components/brand";
+import { AccueilLien } from "@/components/accueil-lien";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { SidebarOperation } from "@/components/sidebar-operation";
 
@@ -27,6 +28,8 @@ export async function Sidebar() {
       <Link href="/" aria-label="Téo — accueil">
         <Brand />
       </Link>
+
+      <AccueilLien />
 
       <Suspense>
         <SidebarOperation operations={operations} />

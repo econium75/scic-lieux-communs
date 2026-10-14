@@ -9,6 +9,7 @@ import type { Operation } from "@/lib/types";
 import { SidebarOperation } from "@/components/sidebar-operation";
 import { EquipeNav } from "@/components/equipe-nav";
 import { Brand } from "@/components/brand";
+import { AccueilLien } from "@/components/accueil-lien";
 import { AuthBadge } from "@/components/auth-badge";
 import { NotificationsBell } from "@/components/notifications-bell";
 
@@ -73,6 +74,8 @@ export function MobileHeader() {
 
             <div className="px-5 py-6 flex flex-col gap-6 min-h-full">
               <Brand />
+
+              <AccueilLien />
 
               <Suspense>
                 <SidebarOperation operations={operations} />

@@ -186,9 +186,9 @@ def test_retard_notifie_une_seule_fois(client, H):
         "echeance": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()})
     c1 = client.get("/api/taches/compteurs", headers=H["lecture"]).json()
     assert c1["en_retard"] >= 1
-    n1 = sum(1 for n in _notifs(client, H["lecture"]) if n["titre"].startswith("Tâche en retard"))
+    n1 = sum(1 for n in _notifs(client, H["lecture"]) if n["titre"] == "Tâche en retard : Lire le compte rendu COPIL")
     client.get("/api/taches/compteurs", headers=H["lecture"])
-    n2 = sum(1 for n in _notifs(client, H["lecture"]) if n["titre"].startswith("Tâche en retard"))
+    n2 = sum(1 for n in _notifs(client, H["lecture"]) if n["titre"] == "Tâche en retard : Lire le compte rendu COPIL")
     assert n1 == n2 == 1
 
 
