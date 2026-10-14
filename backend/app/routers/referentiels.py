@@ -8,11 +8,13 @@ from openpyxl import load_workbook
 from ..db import get_session
 from ..models import Referentiel, AuditLog, User
 from ..auth import require_admin, get_current_user
+from ..engines.simulateur import BAREME_DEFAUT
 
 router = APIRouter()
 
 
 DEFAULTS = [
+    ("bareme_reglementaire", "Barèmes réglementaires du simulateur (loyers, plafonds BRS, taux, règles)", BAREME_DEFAUT),
     ("zones_brs", "Zones BRS — plafonds de vente HT/m²", {
         "1": {"libelle": "Paris", "plafond_vente_m2_ht": 5265},
         "1bis": {"libelle": "1ʳᵉ couronne IDF", "plafond_vente_m2_ht": 4094},

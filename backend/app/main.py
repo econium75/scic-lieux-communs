@@ -21,6 +21,7 @@ from .routers import (
     briefing,
     attachments,
     imports,
+    simulations,
 )
 
 
@@ -29,6 +30,7 @@ async def lifespan(app: FastAPI):
     init_db()
     from .seed import seed_if_empty
     seed_if_empty()
+    simulations.seed_simulations()
     # Seed users
     from .db import engine
     from sqlmodel import Session
@@ -73,6 +75,7 @@ app.include_router(notifications.router, prefix="/api/notifications", tags=["Not
 app.include_router(briefing.router, prefix="/api/briefing", tags=["Briefing podcast"])
 app.include_router(attachments.router, prefix="/api/attachments", tags=["Pièces jointes"])
 app.include_router(imports.router, prefix="/api/imports", tags=["Imports batch"])
+app.include_router(simulations.router, prefix="/api/simulations", tags=["Simulateur 8 onglets"])
 
 
 @app.get("/api/health")

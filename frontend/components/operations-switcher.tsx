@@ -10,24 +10,18 @@ type FormState = {
   code: string;
   nom: string;
   commune: string;
-  zone_brs: string;
-  nb_logements_total: number;
-  nb_logements_brs: number;
-  nb_logements_pli: number;
-  surface_habitable_m2: number;
-  livraison_cible: string;
+  zone_123: string;
+  zone_abc: string;
+  annee_livraison: number;
 };
 
 const EMPTY: FormState = {
   code: "",
   nom: "",
   commune: "",
-  zone_brs: "1bis",
-  nb_logements_total: 0,
-  nb_logements_brs: 0,
-  nb_logements_pli: 0,
-  surface_habitable_m2: 0,
-  livraison_cible: "T4 2027",
+  zone_123: "Z1",
+  zone_abc: "A",
+  annee_livraison: new Date().getFullYear() + 3,
 };
 
 export function OperationsSwitcher({
@@ -82,15 +76,10 @@ export function OperationsSwitcher({
   const openEdit = () => {
     if (!active) return;
     setForm({
+      ...EMPTY,
       code: active.code,
       nom: active.nom,
       commune: active.commune,
-      zone_brs: active.zone_brs,
-      nb_logements_total: active.nb_logements_total,
-      nb_logements_brs: active.nb_logements_brs,
-      nb_logements_pli: active.nb_logements_pli,
-      surface_habitable_m2: active.surface_habitable_m2,
-      livraison_cible: active.livraison_cible,
     });
     setEditId(active.id);
     setErr(null);
@@ -103,12 +92,13 @@ export function OperationsSwitcher({
     setSaving(true);
     try {
       if (modal === "create") {
-        const op = await api.createOperation(form);
+        const op = await api.createOperation(form as unknown as Partial<Operation>);
         setModal(null);
         await reload();
-        router.push(`/operations/${op.id}`);
+        // L'utilisateur complète ensuite hypothèses, prix de revient, financement et réservations
+        router.push(`/operations/${op.id}/simulateur?onglet=hypotheses`);
       } else if (modal === "edit" && editId) {
-        await api.updateOperation(editId, form);
+        await api.updateOperation(editId, { code: form.code, nom: form.nom, commune: form.commune });
         setModal(null);
         await reload();
         router.refresh();
@@ -233,6 +223,18 @@ function Modal({
     </label>
   );
 
+  const creation = title === "Nouvelle opération";
+  const select = (label: string, k: "zone_123" | "zone_abc", options: { v: string; l: string }[]) => (
+    <label className="block">
+      <span className="text-[10px] uppercase tracking-widest text-ink-500">{label}</span>
+      <select value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} className="mt-1 w-full px-2 py-1.5 border border-paper-200 rounded-sm text-sm bg-white">
+        {options.map((o) => (
+          <option key={o.v} value={o.v}>{o.l}</option>
+        ))}
+      </select>
+    </label>
+  );
+
   return (
     <div className="fixed inset-0 bg-ink-900/60 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-sm max-w-xl w-full max-h-[90vh] overflow-y-auto">
@@ -241,25 +243,35 @@ function Modal({
           <button onClick={close} className="text-ink-500 hover:text-ink-900 text-sm">✕</button>
         </div>
         <div className="p-5 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {field("Code (unique)", "code")}
-            {field("Nom", "nom")}
+            {field("Nom de l'opération", "nom")}
             {field("Commune", "commune")}
-            <label className="block">
-              <span className="text-[10px] uppercase tracking-widest text-ink-500">Zone BRS</span>
-              <select value={form.zone_brs} onChange={(e) => setForm({ ...form, zone_brs: e.target.value })} className="mt-1 w-full px-2 py-1.5 border border-paper-200 rounded-sm text-sm bg-white">
-                <option value="1">1 (Paris)</option>
-                <option value="1bis">1bis (1ʳᵉ couronne IDF)</option>
-                <option value="2">2 (Grandes agglos)</option>
-                <option value="3">3 (Reste)</option>
-              </select>
-            </label>
-            {field("Nb logements total", "nb_logements_total", "number")}
-            {field("Nb logements BRS", "nb_logements_brs", "number")}
-            {field("Nb logements PLI/Béguinage", "nb_logements_pli", "number")}
-            {field("SHAB (m²)", "surface_habitable_m2", "number")}
-            {field("Livraison cible", "livraison_cible")}
+            {creation && (
+              <>
+                {field("Année de livraison", "annee_livraison", "number")}
+                {select("Zone loyers PLAI / PLUS", "zone_123", [
+                  { v: "Z1bis", l: "Zone 1bis" },
+                  { v: "Z1", l: "Zone 1" },
+                  { v: "Z2", l: "Zone 2" },
+                  { v: "Z3", l: "Zone 3" },
+                ])}
+                {select("Zone A / B / C", "zone_abc", [
+                  { v: "Abis", l: "A bis" },
+                  { v: "A", l: "A" },
+                  { v: "B1", l: "B1" },
+                  { v: "B2", l: "B2" },
+                  { v: "C", l: "C" },
+                ])}
+              </>
+            )}
           </div>
+          {creation && (
+            <p className="text-xs text-ink-500">
+              Après création, le simulateur s'ouvre sur les hypothèses : complétez ensuite le programme, le prix de revient,
+              le plan de financement et les réservations. Les bilans et la synthèse se calculent automatiquement.
+            </p>
+          )}
           {err && <div className="rounded-sm border border-danger-500/30 bg-danger-50 px-3 py-2 text-xs text-ink-700">{err}</div>}
         </div>
         <div className="px-5 py-3 border-t border-paper-200 flex items-center justify-end gap-2">

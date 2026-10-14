@@ -1,10 +1,6 @@
-import { api } from "@/lib/api";
-import { ParametresClient } from "./client";
+import { redirect } from "next/navigation";
 
-export default async function ParamsOperationPage({ params }: { params: { id: string } }) {
-  const opId = Number(params.id);
-  const scenarios = await api.listScenarios(opId);
-  const scenarioRef = scenarios.find((s) => s.is_reference) || scenarios[0];
-  const full = await api.getScenario(scenarioRef.id);
-  return <ParametresClient opId={opId} scenario={full} />;
+// Page remplacée par le simulateur 8 onglets (validé par le client le 14/10/2026)
+export default function Page({ params }: { params: { id: string } }) {
+  redirect(`/operations/${params.id}/simulateur?onglet=hypotheses`);
 }

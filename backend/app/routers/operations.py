@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from ..db import get_session
-from ..models import Operation, Scenario, Phase, AuditLog, User
+from ..models import Operation, Scenario, Phase, AuditLog, User, Simulation
 from ..auth import get_current_user, require_saisie, require_admin
+from ..engines.simulateur import simulation_defaut, ZONES_123, ZONES_ABC
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -23,6 +24,10 @@ class OperationCreate(BaseModel):
     nb_logements_pluspai: int = 0
     surface_habitable_m2: float = 0.0
     livraison_cible: str = "T4 2027"
+    # Initialisation du simulateur
+    zone_123: str = "Z1"
+    zone_abc: str = "A"
+    annee_livraison: int | None = None
 
 
 class OperationUpdate(BaseModel):
@@ -68,10 +73,20 @@ def create_operation(
     exists = session.exec(select(Operation).where(Operation.code == body.code)).first()
     if exists:
         raise HTTPException(409, f"Code {body.code} déjà utilisé")
-    op = Operation(**body.model_dump())
+    if body.zone_123 not in ZONES_123 or body.zone_abc not in ZONES_ABC:
+        raise HTTPException(422, "Zone inconnue")
+    champs = body.model_dump(exclude={"zone_123", "zone_abc", "annee_livraison"})
+    if body.annee_livraison:
+        champs["livraison_cible"] = str(body.annee_livraison)
+    op = Operation(**champs)
     session.add(op)
     session.commit()
     session.refresh(op)
+    session.add(Simulation(
+        operation_id=op.id,
+        data=simulation_defaut(op.nom, op.commune, body.zone_123, body.zone_abc, body.annee_livraison),
+        updated_by=user.username,
+    ))
     # Scénario de référence par défaut
     scenario = Scenario(
         operation_id=op.id,
@@ -127,6 +142,8 @@ def delete_operation(
         session.delete(sc)
     for p in session.exec(select(Phase).where(Phase.operation_id == operation_id)).all():
         session.delete(p)
+    for s in session.exec(select(Simulation).where(Simulation.operation_id == operation_id)).all():
+        session.delete(s)
     code_sauve = op.code
     session.delete(op)
     session.add(AuditLog(

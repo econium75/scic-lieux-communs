@@ -27,7 +27,9 @@ export function AttachmentsPanel({
   const [description, setDescription] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const canEdit = typeof window !== "undefined" && !!getUser();
+  // Lu après montage : lire localStorage pendant le rendu faisait diverger serveur et client (erreur d'hydratation)
+  const [canEdit, setCanEdit] = useState(false);
+  useEffect(() => setCanEdit(!!getUser()), []);
 
   const reload = async () => {
     setLoading(true);

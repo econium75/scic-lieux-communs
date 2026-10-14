@@ -1,52 +1,26 @@
+import { Suspense } from "react";
 import Link from "next/link";
-import {
-  LayoutDashboard,
-  TableProperties,
-  Receipt,
-  Users,
-  Scale,
-  GitBranch,
-  Sliders,
-  ArrowLeftRight,
-  Settings2,
-  FileClock,
-  Calendar,
-  Mic,
-  UserCog,
-  Upload,
-} from "lucide-react";
+import { Sliders, ArrowLeftRight, FileClock, Calendar, Mic, UserCog } from "lucide-react";
 import { api } from "@/lib/api";
 import { AuthBadge } from "@/components/auth-badge";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { OperationsSwitcher } from "@/components/operations-switcher";
+import { SidebarOperation } from "@/components/sidebar-operation";
 
-export async function Sidebar({ activeOperationId }: { activeOperationId?: number }) {
+export async function Sidebar() {
   let operations: Awaited<ReturnType<typeof api.listOperations>> = [];
   try {
     operations = await api.listOperations();
   } catch {
     // backend offline — sidebar still renders
   }
-  const active = operations.find((o) => o.id === activeOperationId) || operations[0];
-  const opId = active?.id;
 
-  const operationLinks = [
-    { href: `/operations/${opId}`, label: "Synthèse", icon: LayoutDashboard },
-    { href: `/operations/${opId}/bilan`, label: "Bilan d'opération", icon: TableProperties },
-    { href: `/operations/${opId}/exploitation`, label: "Exploitation locative", icon: Receipt },
-    { href: `/operations/${opId}/commercialisation`, label: "Commercialisation BRS", icon: Users },
-    { href: `/operations/${opId}/bilan-exploitation`, label: "Bilan d'exploitation", icon: Scale },
-    { href: `/operations/${opId}/scenarios`, label: "Scénarios", icon: GitBranch },
-    { href: `/operations/${opId}/parametres`, label: "Hypothèses opération", icon: Settings2 },
-    { href: `/operations/${opId}/imports`, label: "Imports", icon: Upload },
-  ];
   const equipeLinks = [
     { href: "/agenda", label: "Agenda partagé", icon: Calendar },
     { href: "/briefing", label: "Briefing podcast", icon: Mic },
     { href: "/admin/users", label: "Utilisateurs", icon: UserCog },
   ];
   const referentielLinks = [
-    { href: "/parametres", label: "Paramètres", icon: Sliders },
+    { href: "/parametres", label: "Barèmes & paramètres", icon: Sliders },
     { href: "/donnees-exports", label: "Données & exports", icon: ArrowLeftRight },
     { href: "/audit", label: "Journal d'audit", icon: FileClock },
   ];
@@ -63,17 +37,9 @@ export async function Sidebar({ activeOperationId }: { activeOperationId?: numbe
         </div>
       </div>
 
-      <SectionTitle>Opération active</SectionTitle>
-      <OperationsSwitcher activeOperationId={activeOperationId} initialOperations={operations} />
-
-      {opId && (
-        <nav className="flex flex-col gap-0.5">
-          <SectionTitle>Opération</SectionTitle>
-          {operationLinks.map((link) => (
-            <NavLink key={link.href} {...link} />
-          ))}
-        </nav>
-      )}
+      <Suspense>
+        <SidebarOperation operations={operations} />
+      </Suspense>
 
       <nav className="flex flex-col gap-0.5">
         <SectionTitle>Équipe</SectionTitle>
@@ -95,8 +61,7 @@ export async function Sidebar({ activeOperationId }: { activeOperationId?: numbe
           <AuthBadge />
         </div>
         <div className="text-[10px] text-ink-300 flex items-center justify-between">
-          <span>v0.6 session 6</span>
-          <span>Thème clair</span>
+          <span>v1.0 · simulateur 8 onglets</span>
         </div>
       </div>
     </aside>
@@ -104,14 +69,10 @@ export async function Sidebar({ activeOperationId }: { activeOperationId?: numbe
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium">
-      {children}
-    </div>
-  );
+  return <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium">{children}</div>;
 }
 
-function NavLink({ href, label, icon: Icon }: { href: string; label: string; icon: typeof LayoutDashboard }) {
+function NavLink({ href, label, icon: Icon }: { href: string; label: string; icon: typeof Sliders }) {
   return (
     <Link
       href={href}

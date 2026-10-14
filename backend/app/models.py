@@ -41,6 +41,15 @@ class Scenario(SQLModel, table=True):
     operation: Optional[Operation] = Relationship(back_populates="scenarios")
 
 
+class Simulation(SQLModel, table=True):
+    """Simulateur 8 onglets — une simulation par opération (saisie JSON, calculs à la volée)."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    operation_id: int = Field(foreign_key="operation.id", index=True, unique=True)
+    data: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    updated_at: datetime = Field(default_factory=_utcnow)
+    updated_by: str = Field(default="")
+
+
 class Menage(SQLModel, table=True):
     """Ménage candidat à l'accession BRS (M4)."""
     id: Optional[int] = Field(default=None, primary_key=True)

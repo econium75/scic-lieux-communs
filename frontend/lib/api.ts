@@ -7,6 +7,7 @@ import type {
   QualificationPreviewPayload,
   ExploitationResult,
 } from "./types";
+import type { SimData, SimResult, SimulationPayload } from "./simulateur";
 
 const API_BASE =
   typeof window === "undefined"
@@ -51,6 +52,29 @@ export const api = {
     fetchJson<Operation>(`/api/operations/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   deleteOperation: (id: number) =>
     fetchJson<{ ok: boolean }>(`/api/operations/${id}`, { method: "DELETE" }),
+
+  // Simulateur 8 onglets
+  getSimulation: (opId: number) => fetchJson<SimulationPayload>(`/api/simulations/operation/${opId}`),
+  saveSimulation: (opId: number, data: SimData) =>
+    fetchJson<SimulationPayload>(`/api/simulations/operation/${opId}`, {
+      method: "PUT",
+      body: JSON.stringify({ data }),
+    }),
+  calculSimulation: (opId: number, data: SimData) =>
+    fetchJson<SimResult>(`/api/simulations/operation/${opId}/calcul`, {
+      method: "POST",
+      body: JSON.stringify({ data }),
+    }),
+  appliquerBareme: (opId: number, data: SimData) =>
+    fetchJson<{ data: SimData }>(`/api/simulations/operation/${opId}/appliquer-bareme`, {
+      method: "POST",
+      body: JSON.stringify({ data }),
+    }),
+  prefillPrixRevient: (opId: number, data: SimData) =>
+    fetchJson<{ data: SimData }>(`/api/simulations/operation/${opId}/prefill-prix-revient`, {
+      method: "POST",
+      body: JSON.stringify({ data }),
+    }),
 
   // Scenarios
   listScenarios: (opId: number) => fetchJson<Scenario[]>(`/api/operations/${opId}/scenarios`),
