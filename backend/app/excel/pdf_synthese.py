@@ -44,7 +44,7 @@ def build_pdf_synthese(bilan: dict, exploit: dict | None, scenario_nom: str) -> 
         topMargin=15 * mm, bottomMargin=15 * mm,
         leftMargin=15 * mm, rightMargin=15 * mm,
         title=f"Synthèse {bilan['nom']}",
-        author="SCIC Lieux Communs — Simulateur",
+        author="Téo — SCIC Lieux Communs",
     )
 
     styles = getSampleStyleSheet()
@@ -161,7 +161,7 @@ def build_pdf_synthese(bilan: dict, exploit: dict | None, scenario_nom: str) -> 
     # ---------- Footer ----------
     story.append(Paragraph(
         f"Document généré automatiquement le {datetime.now().strftime('%d/%m/%Y à %H:%M')} par le "
-        f"simulateur SCIC Lieux Communs — version 0.1 (sessions 1-5). "
+        f"Téo — SCIC Lieux Communs. "
         f"Confidentiel. Ne constitue pas un engagement contractuel.",
         small,
     ))

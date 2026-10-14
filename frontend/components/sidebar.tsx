@@ -4,6 +4,7 @@ import { Sliders, ArrowLeftRight, FileClock } from "lucide-react";
 import { api } from "@/lib/api";
 import { AuthBadge } from "@/components/auth-badge";
 import { EquipeNav } from "@/components/equipe-nav";
+import { Brand } from "@/components/brand";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { SidebarOperation } from "@/components/sidebar-operation";
 
@@ -23,15 +24,9 @@ export async function Sidebar() {
 
   return (
     <aside className="w-64 shrink-0 border-r border-paper-200 bg-paper-50 min-h-screen px-5 py-6 flex flex-col gap-6">
-      <div className="flex items-start gap-3">
-        <div className="h-10 w-10 rounded-sm bg-brand-700 text-white flex items-center justify-center font-serif text-lg font-bold">
-          LC
-        </div>
-        <div className="leading-tight">
-          <div className="font-serif font-bold text-ink-900">Lieux Communs</div>
-          <div className="text-[11px] tracking-wider text-ink-500 uppercase">Simulateur SCIC</div>
-        </div>
-      </div>
+      <Link href="/" aria-label="Téo — accueil">
+        <Brand />
+      </Link>
 
       <Suspense>
         <SidebarOperation operations={operations} />
@@ -52,7 +47,7 @@ export async function Sidebar() {
           <AuthBadge />
         </div>
         <div className="text-[10px] text-ink-300 flex items-center justify-between">
-          <span>v1.0 · simulateur 8 onglets</span>
+          <span>Téo v1.1</span>
         </div>
       </div>
     </aside>

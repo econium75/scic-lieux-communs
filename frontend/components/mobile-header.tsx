@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import type { Operation } from "@/lib/types";
 import { SidebarOperation } from "@/components/sidebar-operation";
 import { EquipeNav } from "@/components/equipe-nav";
+import { Brand } from "@/components/brand";
 import { AuthBadge } from "@/components/auth-badge";
 import { NotificationsBell } from "@/components/notifications-bell";
 
@@ -43,12 +44,9 @@ export function MobileHeader() {
         >
           <Menu size={22} />
         </button>
-        <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-sm bg-brand-700 text-white flex items-center justify-center font-serif text-sm font-bold">
-            LC
-          </div>
-          <div className="font-serif font-bold text-ink-900 text-sm">Lieux Communs</div>
-        </div>
+        <Link href="/" aria-label="Téo — accueil">
+          <Brand taille="compact" />
+        </Link>
         <NotificationsBell variante="entete" />
       </header>
 
@@ -74,15 +72,7 @@ export function MobileHeader() {
             </button>
 
             <div className="px-5 py-6 flex flex-col gap-6 min-h-full">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-sm bg-brand-700 text-white flex items-center justify-center font-serif text-lg font-bold">
-                  LC
-                </div>
-                <div className="leading-tight">
-                  <div className="font-serif font-bold text-ink-900">Lieux Communs</div>
-                  <div className="text-[11px] tracking-wider text-ink-500 uppercase">Simulateur SCIC</div>
-                </div>
-              </div>
+              <Brand />
 
               <Suspense>
                 <SidebarOperation operations={operations} />

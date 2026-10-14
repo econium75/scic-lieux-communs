@@ -36,6 +36,7 @@ class PhaseCreate(BaseModel):
 class PhaseUpdate(BaseModel):
     nom: str | None = None
     statut: str | None = None
+    date_debut: datetime | None = None
     date_cible: datetime | None = None
     date_realisation: datetime | None = None
     responsable: str | None = None
@@ -90,6 +91,8 @@ def update_phase(
         raise HTTPException(404, "Phase introuvable")
     changes = body.model_dump(exclude_none=True)
     for k, v in changes.items():
+        if isinstance(v, datetime) and v.tzinfo is None:  # « 2027-03-01 » → minuit UTC (SQLModel exige un fuseau)
+            v = v.replace(tzinfo=timezone.utc)
         setattr(p, k, v)
     p.updated_at = datetime.now(timezone.utc)
     session.add(p)
@@ -100,14 +103,14 @@ def update_phase(
             type_notif="validation" if changes["statut"] == "termine" else "info",
             titre=f"Phase « {p.nom} » : statut changé",
             message=f"Nouveau statut : {changes['statut']} (opération #{p.operation_id})",
-            url_action=f"/operations/{p.operation_id}",
+            url_action=f"/operations/{p.operation_id}/projet?vue=phases",
             emise_par=user.username,
             target_type="phase",
             target_id=phase_id,
         ))
     session.add(AuditLog(
         action="phase_update", target_type="phase", target_id=phase_id,
-        user=user.username, payload=changes,
+        user=user.username, payload=body.model_dump(exclude_none=True, mode="json"),  # dates → texte (colonne JSON)
     ))
     session.commit()
     session.refresh(p)

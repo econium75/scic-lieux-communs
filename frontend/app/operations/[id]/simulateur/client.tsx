@@ -160,7 +160,7 @@ export function SimulateurClient({ opId, initial }: { opId: number; initial: Sim
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
           <div className="text-[10px] uppercase tracking-widest text-ink-500">
-            Simulateur · <Link href={`/operations/${opId}`} className="hover:underline">{saved.operation.code}</Link>
+            Montage financier · <Link href={`/operations/${opId}`} className="hover:underline">{saved.operation.code}</Link>
           </div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-0.5 truncate">
             {data.hypotheses.nom_operation || saved.operation.nom}

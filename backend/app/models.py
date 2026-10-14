@@ -1,5 +1,5 @@
 """Modèles de données SQLModel pour SCIC Lieux Communs."""
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field, Relationship, JSON, Column
 
@@ -109,6 +109,7 @@ class Phase(SQLModel, table=True):
     ordre: int = Field(default=0)
     nom: str  # "Incubation", "Cadrage", "Montage financier", "Instruction permis", "VEFA", "Livraison", "Exploitation"
     statut: str = Field(default="a_faire")  # a_faire | en_cours | termine | bloque
+    date_debut: Optional[datetime] = None  # ajouté pour le diagramme de Gantt (migration douce, cf. db.py)
     date_cible: Optional[datetime] = None
     date_realisation: Optional[datetime] = None
     responsable: str = Field(default="")  # username
@@ -236,6 +237,27 @@ class Tache(SQLModel, table=True):
     vue_at: Optional[datetime] = None
     terminee_at: Optional[datetime] = None
     rappel_retard_envoye: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
+class TacheProjet(SQLModel, table=True):
+    """Ligne du planning (diagramme de Gantt) : tâche ou jalon, rattachée à une phase de l'opération."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    operation_id: int = Field(foreign_key="operation.id", index=True)
+    phase_id: Optional[int] = Field(default=None, foreign_key="phase.id", index=True)
+    parent_id: Optional[int] = Field(default=None, index=True)  # sous-tâche
+    type: str = Field(default="tache")  # tache | jalon
+    titre: str
+    debut: date
+    fin: date
+    avancement: int = Field(default=0)  # 0–100 %
+    statut: str = Field(default="a_faire")  # a_faire | en_cours | termine | bloque
+    assignes: list = Field(default_factory=list, sa_column=Column(JSON))  # [usernames]
+    dependances: list = Field(default_factory=list, sa_column=Column(JSON))  # [ids prédécesseurs, fin → début]
+    ordre: int = Field(default=0)
+    notes: str = Field(default="")
+    cree_par: str = Field(default="")
     created_at: datetime = Field(default_factory=_utcnow)
     updated_at: datetime = Field(default_factory=_utcnow)
 

@@ -4,14 +4,14 @@ import { AppShell } from "@/components/app-shell";
 import { PWARegister } from "@/components/pwa-register";
 
 export const metadata: Metadata = {
-  title: "SCIC Lieux Communs — Simulateur",
-  description: "Simulation financière multi-scénarios pour opérations BRS/PLS/PLI (habitat partagé & béguinage).",
+  title: "Téo — SCIC",
+  description: "Téo, l'outil de la SCIC Lieux Communs : montage financier des opérations, gestion de projet, tâches et documents.",
   manifest: "/manifest.json",
-  applicationName: "Lieux Communs",
+  applicationName: "Téo",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Lieux Communs",
+    title: "Téo",
   },
   formatDetection: { telephone: false },
   icons: {

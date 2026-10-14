@@ -2,7 +2,6 @@ import Link from "next/link";
 import { FileDown, ArrowRight, AlertTriangle, AlertOctagon, Info } from "lucide-react";
 import { api } from "@/lib/api";
 import { KpiCard } from "@/components/kpi-card";
-import { PhasesTimeline } from "@/components/phases-timeline";
 import { AttachmentsPanel } from "@/components/attachments-panel";
 import { AutofinancementChart } from "@/components/simulateur/autofinancement-chart";
 import { formatEuro, formatNumber } from "@/lib/format";
@@ -14,6 +13,12 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
   const s = sim.result.synthese;
   const alertes = sim.result.alertes;
   const produits = s.repartition.filter((r) => r.nb > 0);
+  const planning = await api.getPlanning(opId).catch(() => null);
+  const aujourd = new Date().toISOString().slice(0, 10);
+  const prochainsJalons = (planning?.taches || [])
+    .filter((t) => t.type === "jalon" && t.statut !== "termine" && t.debut >= aujourd)
+    .sort((a, b) => a.debut.localeCompare(b.debut))
+    .slice(0, 3);
 
   return (
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
@@ -31,7 +36,7 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
             href={`/operations/${opId}/simulateur?onglet=hypotheses`}
             className="text-xs px-3 py-1.5 bg-brand-500 text-white rounded-sm hover:bg-brand-700 inline-flex items-center gap-1.5"
           >
-            Ouvrir le simulateur <ArrowRight size={13} />
+            Ouvrir le montage financier <ArrowRight size={13} />
           </Link>
           <a
             href={exportUrl(opId, "complet")}
@@ -61,7 +66,7 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
         <div className="lg:col-span-3 rounded-sm border border-paper-200 bg-white p-5">
-          <div className="text-[10px] uppercase tracking-widest text-ink-500 mb-3">Simulateur — accès direct</div>
+          <div className="text-[10px] uppercase tracking-widest text-ink-500 mb-3">Montage financier — accès direct</div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {ONGLETS.map((o) => (
               <Link
@@ -95,9 +100,49 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
         </div>
       </div>
 
-      <div className="rounded-sm border border-paper-200 bg-white p-5 mb-6">
-        <PhasesTimeline operationId={opId} />
-      </div>
+      {planning && (
+        <div className="rounded-sm border border-paper-200 bg-white p-5 mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div className="text-[10px] uppercase tracking-widest text-ink-500">Gestion de projet</div>
+            <div className="flex items-center gap-3 text-[11px]">
+              <Link href={`/operations/${opId}/projet?vue=gantt`} className="text-brand-500 hover:underline">Diagramme de Gantt →</Link>
+              <Link href={`/operations/${opId}/projet?vue=phases`} className="text-brand-500 hover:underline">Suivi des phases →</Link>
+            </div>
+          </div>
+          {planning.phases.length === 0 ? (
+            <p className="text-sm text-ink-500">
+              Aucune phase définie.{" "}
+              <Link href={`/operations/${opId}/projet?vue=phases`} className="text-brand-500 hover:underline">Initialiser le suivi de projet</Link>
+            </p>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-2 flex-1 rounded-full bg-paper-100 overflow-hidden">
+                  <div className="h-full bg-brand-500" style={{ width: `${planning.projet.avancement}%` }} />
+                </div>
+                <span className="text-sm text-ink-900 font-medium">{planning.projet.avancement} %</span>
+                {planning.projet.nb_en_retard > 0 && <span className="text-xs text-danger-500 font-medium">{planning.projet.nb_en_retard} en retard</span>}
+              </div>
+              <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
+                {planning.phases.map((ph) => (
+                  <div key={ph.id} className="text-center">
+                    <div className={`mx-auto h-2 rounded-full ${ph.statut === "termine" ? "bg-ok-500" : ph.statut === "en_cours" ? "bg-warn-500" : ph.statut === "bloque" ? "bg-danger-500" : "bg-paper-200"}`} />
+                    <div className="text-[10px] text-ink-700 mt-1 leading-tight">{ph.nom}</div>
+                  </div>
+                ))}
+              </div>
+              {prochainsJalons.length > 0 && (
+                <div className="mt-4 text-xs text-ink-700 flex flex-wrap gap-x-5 gap-y-1">
+                  <span className="text-ink-500">Prochains jalons :</span>
+                  {prochainsJalons.map((j) => (
+                    <span key={j.id}><span className="text-fuchsia-600">◆</span> {j.titre} — {j.debut.split("-").reverse().join("/")}</span>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       <div className="mb-6">
         <AttachmentsPanel parentType="operation" parentId={opId} title="Documents de l'opération" />

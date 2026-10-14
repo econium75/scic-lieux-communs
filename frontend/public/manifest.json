@@ -1,7 +1,7 @@
 {
-  "name": "SCIC Lieux Communs — Simulateur",
-  "short_name": "Lieux Communs",
-  "description": "Simulateur financier BRS/PLS/PLI pour SCIC Lieux Communs",
+  "name": "Téo — SCIC Lieux Communs",
+  "short_name": "Téo",
+  "description": "Montage financier des opérations, gestion de projet, tâches et porte-documents de la SCIC Lieux Communs",
   "lang": "fr-FR",
   "start_url": "/",
   "scope": "/",
@@ -9,7 +9,11 @@
   "orientation": "any",
   "background_color": "#fafaf7",
   "theme_color": "#1F3A68",
-  "categories": ["business", "finance", "productivity"],
+  "categories": [
+    "business",
+    "finance",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -32,19 +36,34 @@
   ],
   "shortcuts": [
     {
-      "name": "Synthèse Orly Ecohome",
-      "url": "/operations/1",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "name": "Mes tâches",
+      "url": "/taches",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Gestion de projet",
+      "url": "/operations/1/projet",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Agenda partagé",
       "url": "/agenda",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Briefing podcast",
-      "url": "/briefing",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

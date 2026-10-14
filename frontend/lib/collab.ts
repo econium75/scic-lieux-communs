@@ -85,7 +85,7 @@ function headers(json = true): Record<string, string> {
   return h;
 }
 
-async function req<T>(url: string, init: RequestInit = {}, json = true): Promise<T> {
+export async function req<T>(url: string, init: RequestInit = {}, json = true): Promise<T> {
   const res = await fetch(url, { cache: "no-store", ...init, headers: { ...headers(json), ...(init.headers as Record<string, string>) } });
   if (!res.ok) {
     let detail = "";

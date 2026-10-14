@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutDashboard, Users, GitBranch, Upload } from "lucide-react";
+import { LayoutDashboard, Users, GitBranch, Upload, GanttChartSquare, KanbanSquare, Milestone } from "lucide-react";
 import { ONGLETS } from "@/lib/simulateur";
 import { cn } from "@/lib/format";
 import type { Operation } from "@/lib/types";
@@ -17,6 +17,7 @@ export function OperationNav({ opId, compact = false }: { opId: number; compact?
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const ongletActif = pathname.endsWith("/simulateur") ? searchParams.get("onglet") || "hypotheses" : null;
+  const vueProjet = pathname.endsWith("/projet") ? searchParams.get("vue") || "gantt" : null;
   const py = compact ? "py-1.5" : "py-2";
 
   const lien = (href: string, label: string, actif: boolean, icon?: React.ReactNode) => (
@@ -33,13 +34,15 @@ export function OperationNav({ opId, compact = false }: { opId: number; compact?
       <span className="truncate">{label}</span>
     </Link>
   );
+  const titre = (t: string) => <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium mt-3 mb-1">{t}</div>;
+  const ico = "text-ink-500 shrink-0";
 
   return (
     <nav className="flex flex-col gap-0.5">
       <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium mb-1">Opération</div>
-      {lien(`/operations/${opId}`, "Tableau de bord", pathname === `/operations/${opId}`, <LayoutDashboard size={15} className="text-ink-500 shrink-0" />)}
+      {lien(`/operations/${opId}`, "Tableau de bord", pathname === `/operations/${opId}`, <LayoutDashboard size={15} className={ico} />)}
 
-      <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium mt-3 mb-1">Simulateur</div>
+      {titre("Montage financier")}
       {ONGLETS.map((o) =>
         lien(
           `/operations/${opId}/simulateur?onglet=${o.key}`,
@@ -56,10 +59,15 @@ export function OperationNav({ opId, compact = false }: { opId: number; compact?
         )
       )}
 
-      <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium mt-3 mb-1">Modules</div>
-      {lien(`/operations/${opId}/commercialisation`, "Commercialisation BRS", pathname.endsWith("/commercialisation"), <Users size={15} className="text-ink-500 shrink-0" />)}
-      {lien(`/operations/${opId}/scenarios`, "Scénarios", pathname.includes("/scenarios"), <GitBranch size={15} className="text-ink-500 shrink-0" />)}
-      {lien(`/operations/${opId}/imports`, "Imports", pathname.endsWith("/imports"), <Upload size={15} className="text-ink-500 shrink-0" />)}
+      {titre("Gestion de projet")}
+      {lien(`/operations/${opId}/projet?vue=gantt`, "Diagramme de Gantt", vueProjet === "gantt", <GanttChartSquare size={15} className={ico} />)}
+      {lien(`/operations/${opId}/projet?vue=tableau`, "Tableau des tâches", vueProjet === "tableau", <KanbanSquare size={15} className={ico} />)}
+      {lien(`/operations/${opId}/projet?vue=phases`, "Suivi des phases", vueProjet === "phases", <Milestone size={15} className={ico} />)}
+
+      {titre("Modules")}
+      {lien(`/operations/${opId}/commercialisation`, "Commercialisation BRS", pathname.endsWith("/commercialisation"), <Users size={15} className={ico} />)}
+      {lien(`/operations/${opId}/scenarios`, "Scénarios", pathname.includes("/scenarios"), <GitBranch size={15} className={ico} />)}
+      {lien(`/operations/${opId}/imports`, "Imports", pathname.endsWith("/imports"), <Upload size={15} className={ico} />)}
     </nav>
   );
 }

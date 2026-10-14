@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/auth";
 import { LogIn } from "lucide-react";
+import { Brand } from "@/components/brand";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,14 +29,8 @@ export default function LoginPage() {
   return (
     <div className="fixed inset-0 bg-paper-50 flex items-center justify-center">
       <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="h-12 w-12 rounded-sm bg-brand-700 text-white flex items-center justify-center font-serif text-xl font-bold">
-            LC
-          </div>
-          <div>
-            <div className="font-serif font-bold text-ink-900">Lieux Communs</div>
-            <div className="text-[11px] tracking-wider text-ink-500 uppercase">Simulateur SCIC</div>
-          </div>
+        <div className="flex items-center justify-center mb-6">
+          <Brand taille="grand" />
         </div>
 
         <form onSubmit={submit} className="rounded-sm border border-paper-200 bg-white p-6 shadow-sm">

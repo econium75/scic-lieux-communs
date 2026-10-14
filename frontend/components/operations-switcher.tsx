@@ -268,7 +268,7 @@ function Modal({
           </div>
           {creation && (
             <p className="text-xs text-ink-500">
-              Après création, le simulateur s'ouvre sur les hypothèses : complétez ensuite le programme, le prix de revient,
+              Après création, le montage financier s'ouvre sur les hypothèses : complétez ensuite le programme, le prix de revient,
               le plan de financement et les réservations. Les bilans et la synthèse se calculent automatiquement.
             </p>
           )}

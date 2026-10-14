@@ -9,9 +9,25 @@ engine = create_engine(
 )
 
 
+# Colonnes ajoutées après coup à des tables existantes : create_all ne les crée pas sur une base déjà en place.
+COLONNES_AJOUTEES = [
+    ("phase", "date_debut", "DATETIME"),
+]
+
+
+def _migrer_colonnes() -> None:
+    from sqlalchemy import inspect, text
+    insp = inspect(engine)
+    with engine.begin() as conn:
+        for table, colonne, type_sql in COLONNES_AJOUTEES:
+            if table in insp.get_table_names() and colonne not in {c["name"] for c in insp.get_columns(table)}:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {colonne} {type_sql}"))
+
+
 def init_db() -> None:
     from . import models  # noqa: F401  register models
     SQLModel.metadata.create_all(engine)
+    _migrer_colonnes()
 
 
 def get_session():

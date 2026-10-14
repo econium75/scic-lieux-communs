@@ -127,7 +127,7 @@ export function CommercialisationClient({
 
       {/* Simulateur ad-hoc */}
       <div className="mt-10">
-        <h2 className="font-serif text-2xl text-ink-900 mb-4">Simulateur de qualification</h2>
+        <h2 className="font-serif text-2xl text-ink-900 mb-4">Test de qualification d’un ménage</h2>
         <PreviewForm />
       </div>
     </div>

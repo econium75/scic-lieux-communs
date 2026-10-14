@@ -138,7 +138,7 @@ def export_ics(
     if operation_id is not None:
         stmt = stmt.where(EventAgenda.operation_id == operation_id)
     fmt = lambda d: d.strftime("%Y%m%dT%H%M%SZ")  # noqa: E731  (dates stockées en UTC)
-    lignes = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//SCIC Lieux Communs//Agenda partagé//FR", "CALSCALE:GREGORIAN"]
+    lignes = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Téo//Agenda partagé//FR", "CALSCALE:GREGORIAN"]
     for e in session.exec(stmt).all():
         fin = e.fin or (e.debut + timedelta(hours=1))
         lignes += ["BEGIN:VEVENT", f"UID:scic-event-{e.id}@lieux-communs", f"DTSTAMP:{fmt(e.created_at)}"]

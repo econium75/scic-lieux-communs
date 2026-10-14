@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from ..db import get_session
-from ..models import Operation, Scenario, Phase, AuditLog, User, Simulation
+from ..models import Operation, Scenario, Phase, AuditLog, User, Simulation, TacheProjet
 from ..auth import get_current_user, require_saisie, require_admin
 from ..engines.simulateur import simulation_defaut, ZONES_123, ZONES_ABC
 from pydantic import BaseModel
@@ -144,6 +144,8 @@ def delete_operation(
         session.delete(p)
     for s in session.exec(select(Simulation).where(Simulation.operation_id == operation_id)).all():
         session.delete(s)
+    for t in session.exec(select(TacheProjet).where(TacheProjet.operation_id == operation_id)).all():
+        session.delete(t)
     code_sauve = op.code
     session.delete(op)
     session.add(AuditLog(
