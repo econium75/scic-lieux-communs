@@ -77,7 +77,7 @@ export function AttachmentsPanel({
   return (
     <div className="rounded-sm border border-paper-200 bg-white overflow-hidden">
       <div className="px-4 py-3 border-b border-paper-200 flex items-center justify-between">
-        <div className="text-[10px] uppercase tracking-widest text-ink-500 font-medium flex items-center gap-2">
+        <div className="text-[11px] uppercase tracking-widest text-ink-500 font-medium flex items-center gap-2">
           <Paperclip size={11} /> {title} ({items.length})
         </div>
       </div>
@@ -125,7 +125,7 @@ export function AttachmentsPanel({
             <FileIcon size={16} className="text-ink-500 shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="text-sm text-ink-900 truncate">{att.filename}</div>
-              <div className="text-[10px] text-ink-500">
+              <div className="text-[11px] text-ink-500">
                 {fmtSize(att.size)} · par {att.uploaded_by} · {new Date(att.uploaded_at).toLocaleString("fr-FR")}
                 {att.description && <> · {att.description}</>}
               </div>

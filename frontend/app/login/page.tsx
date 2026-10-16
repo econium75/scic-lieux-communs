@@ -36,7 +36,7 @@ export default function LoginPage() {
         <form onSubmit={submit} className="rounded-sm border border-paper-200 bg-white p-6 shadow-sm">
           <h1 className="font-serif text-xl text-ink-900 mb-4">Connexion</h1>
           <label className="block mb-3">
-            <span className="text-[10px] uppercase tracking-widest text-ink-500">Identifiant</span>
+            <span className="text-[11px] uppercase tracking-widest text-ink-500">Identifiant</span>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -46,7 +46,7 @@ export default function LoginPage() {
             />
           </label>
           <label className="block mb-4">
-            <span className="text-[10px] uppercase tracking-widest text-ink-500">Mot de passe</span>
+            <span className="text-[11px] uppercase tracking-widest text-ink-500">Mot de passe</span>
             <input
               type="password"
               value={password}
@@ -77,7 +77,7 @@ export default function LoginPage() {
             <li>saisie / saisie123 — CRUD opérations, hypothèses, exports</li>
             <li>lecture / lecture123 — lecture seule + exports</li>
           </ul>
-          <div className="mt-3 text-[10px] italic">
+          <div className="mt-3 text-[11px] italic">
             À changer avant mise en production — gérés en DB table `user`.
           </div>
         </div>

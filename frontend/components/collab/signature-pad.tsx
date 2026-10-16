@@ -152,7 +152,7 @@ export function MaSignature({ onEnregistree, compact = false }: { onEnregistree?
         <Bouton onClick={enregistrer} disabled={busy} variante="primaire"><Save size={13} /> Enregistrer ma signature</Bouton>
         {msg && <span className={cn("text-xs", msg.ok ? "text-ok-500" : "text-danger-500")}>{msg.t}</span>}
       </div>
-      <p className="text-[10px] text-ink-500 leading-relaxed">
+      <p className="text-[11px] text-ink-500 leading-relaxed">
         Votre signature reste dans votre profil et n'est apposée que lorsque vous la placez vous-même sur un document.
         Chaque signature est horodatée et associée à l'empreinte SHA-256 du fichier (signature électronique simple, eIDAS).
       </p>

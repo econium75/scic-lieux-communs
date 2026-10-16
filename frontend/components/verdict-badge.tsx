@@ -8,7 +8,7 @@ export function VerdictBadge({ verdict }: { verdict: Verdict }) {
   }[verdict];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded-sm border ${cfg.bg} ${cfg.border} ${cfg.text}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-bold uppercase tracking-widest rounded-sm border ${cfg.bg} ${cfg.border} ${cfg.text}`}
     >
       ● {cfg.label}
     </span>

@@ -37,7 +37,7 @@ export function MobileHeader() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 h-14 bg-paper-50 border-b border-paper-200 flex items-center justify-between px-4 z-30 lg:hidden">
+      <header className="rail-sombre fixed top-0 left-0 right-0 h-14 bg-paper-50 border-b border-paper-200 flex items-center justify-between px-4 z-30 lg:hidden">
         <button
           onClick={() => setOpen(true)}
           aria-label="Ouvrir le menu"
@@ -58,7 +58,7 @@ export function MobileHeader() {
             onClick={() => setOpen(false)}
           />
           <div
-            className="fixed inset-y-0 left-0 z-50 w-72 bg-paper-50 overflow-y-auto lg:hidden shadow-xl"
+            className="rail-sombre fixed inset-y-0 left-0 z-50 w-72 bg-paper-50 overflow-y-auto lg:hidden shadow-xl"
             onClick={(e) => {
               // Ferme le tiroir après un clic sur un lien (y compris un simple changement d'onglet ?onglet=…)
               if ((e.target as HTMLElement).closest("a")) setOpen(false);
@@ -84,7 +84,7 @@ export function MobileHeader() {
               <EquipeNav />
 
               <nav className="flex flex-col gap-0.5">
-                <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium mb-1">Référentiels</div>
+                <div className="text-[11px] tracking-widest text-ink-500 uppercase font-medium mb-1">Référentiels</div>
                 {refLinks.map((l) => (
                   <Link key={l.href} href={l.href} className="flex items-center gap-2.5 px-2 py-2 text-sm text-ink-700 rounded-sm hover:bg-paper-100">
                     <l.icon size={15} className="text-ink-500 shrink-0" />

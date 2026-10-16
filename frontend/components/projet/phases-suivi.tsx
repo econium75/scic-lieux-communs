@@ -71,7 +71,7 @@ export function PhasesSuivi({
       {/* Frise */}
       <div className="rounded-sm border border-paper-200 bg-white p-5">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">Suivi de projet</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">Suivi de projet</div>
           <div className="text-xs text-ink-500">{terminees} / {phases.length} phases terminées · avancement global {planning.projet.avancement} %</div>
         </div>
         <div className="relative">
@@ -85,7 +85,7 @@ export function PhasesSuivi({
                     <I size={16} />
                   </div>
                   <div className="text-[11px] text-ink-900 mt-1 leading-tight">{p.nom}</div>
-                  <div className="text-[10px] text-ink-500">{p.avancement} %</div>
+                  <div className="text-[11px] text-ink-500">{p.avancement} %</div>
                 </div>
               );
             })}
@@ -97,7 +97,7 @@ export function PhasesSuivi({
       <div className="rounded-sm border border-paper-200 bg-white overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-paper-50">
-            <tr className="text-[10px] uppercase tracking-widest text-ink-500">
+            <tr className="text-[11px] uppercase tracking-widest text-ink-500">
               {["N°", "Phase", "Statut", "Responsable", "Début", "Échéance", "Avancement", "Tâches", "Notes"].map((h) => (
                 <th key={h} className="px-3 py-2 text-left font-medium whitespace-nowrap">{h}</th>
               ))}

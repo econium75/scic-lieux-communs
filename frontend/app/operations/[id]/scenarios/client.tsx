@@ -55,7 +55,7 @@ export function ScenariosClient({
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">M5 — Scénarios & sensibilité</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">M5 — Scénarios & sensibilité</div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Scénarios</h1>
           <p className="text-sm text-ink-500 mt-1">
             Variantes de simulation pour comité d'engagement — duplication, comparaison, sensibilité
@@ -92,7 +92,7 @@ export function ScenariosClient({
         description="Charge un fichier .xls / .xlsx au format du Modèle de bilan.xls client (feuille RECAP ou BILAN) et crée un nouveau scénario."
         extraFields={
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-ink-500">Nom du scénario à créer</span>
+            <span className="text-[11px] uppercase tracking-widest text-ink-500">Nom du scénario à créer</span>
             <input
               type="text"
               value={nomScenario}
@@ -111,7 +111,7 @@ export function ScenariosClient({
       <div className="rounded-sm border border-paper-200 bg-white overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-[10px] uppercase tracking-widest text-ink-500 bg-paper-50">
+            <tr className="text-[11px] uppercase tracking-widest text-ink-500 bg-paper-50">
               <th className="text-left px-5 py-2 font-medium w-10"></th>
               <th className="text-left px-5 py-2 font-medium">Nom</th>
               <th className="text-left px-5 py-2 font-medium">Rôle</th>

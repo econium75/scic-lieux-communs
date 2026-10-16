@@ -2,19 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Apparence « Pilotage » : couleurs en triplets RVB (lus par tailwind.config.ts), police Public Sans. */
+:root,
+.theme-clair {
+  --ink-900: 18 24 38;
+  --ink-700: 55 65 81;
+  --ink-500: 102 112 133;
+  --ink-300: 167 176 192;
+  --paper-50: 243 245 248;
+  --paper-100: 233 237 242;
+  --paper-200: 218 224 232;
+  --brand-50: 238 239 253;
+  --brand-500: 75 82 214;
+  --brand-700: 52 58 171;
+  --brand-900: 35 40 122;
+  --surface: 255 255 255;
+  color: rgb(var(--ink-900));
+}
+
+/* Barre latérale (et en-tête mobile) sur fond sombre : mêmes classes, autres valeurs. */
+.rail-sombre {
+  --ink-900: 236 239 245;
+  --ink-700: 214 220 232;
+  --ink-500: 140 152 176;
+  --ink-300: 106 118 142;
+  --paper-50: 18 26 43;
+  --paper-100: 30 42 64;
+  --paper-200: 38 49 73;
+  --brand-50: 34 42 91;
+  --brand-700: 201 204 255;
+  --surface: 27 37 57;
+  color: rgb(var(--ink-900));
+}
+
 :root {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-public-sans), "Segoe UI", system-ui, sans-serif;
+  --font-serif: var(--font-sans);
 }
 
 html, body {
-  background: #fafaf7;
-  color: #1a1f2e;
+  background: rgb(var(--paper-50));
+  color: rgb(var(--ink-900));
   font-family: var(--font-sans);
+  /* chiffres de même largeur : les montants s'alignent en colonne */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Titres et chiffres clés : même police que le texte, en gras */
+.font-serif {
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .kpi-value {
   font-family: var(--font-serif);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.02em;
+}
+
+/* Repère visible lors de la navigation au clavier */
+:focus-visible {
+  outline: 2px solid rgb(var(--brand-500));
+  outline-offset: 2px;
 }

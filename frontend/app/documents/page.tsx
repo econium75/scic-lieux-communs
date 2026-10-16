@@ -92,7 +92,7 @@ export default function PorteDocumentsPage() {
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-7xl">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500 flex items-center gap-2"><FolderOpen size={11} /> Équipe</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500 flex items-center gap-2"><FolderOpen size={11} /> Équipe</div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Porte-documents</h1>
           <p className="text-sm text-ink-500 mt-1">Vos documents personnels : privés par défaut, partagés quand vous le décidez ou quand vous les joignez à une tâche.</p>
         </div>
@@ -120,7 +120,7 @@ export default function PorteDocumentsPage() {
             ))}
           </nav>
           <div className="rounded-sm border border-paper-200 bg-white overflow-hidden">
-            <div className="px-4 py-2 text-[10px] uppercase tracking-widest text-ink-500 border-b border-paper-200">Mes dossiers</div>
+            <div className="px-4 py-2 text-[11px] uppercase tracking-widest text-ink-500 border-b border-paper-200">Mes dossiers</div>
             {dossiers.map((d) => (
               <button key={d} onClick={() => { setVue("mes"); setDossier(d); }} className={cn("w-full flex items-center gap-2 px-4 py-1.5 text-sm text-left", dossier === d ? "bg-brand-50 text-brand-700 font-medium" : "text-ink-700 hover:bg-paper-50")}>
                 <Folder size={13} className="shrink-0" /> {d}
@@ -168,7 +168,7 @@ export default function PorteDocumentsPage() {
                     {d.partage_avec.length > 0 && d.acces === "proprietaire" && <span>partagé ({d.partage_avec.length})</span>}
                   </div>
                 </div>
-                {d.statut === "signe" && <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-ok-50 text-ok-500 font-medium">Signé</span>}
+                {d.statut === "signe" && <span className="text-[11px] px-1.5 py-0.5 rounded-sm bg-ok-50 text-ok-500 font-medium">Signé</span>}
                 {d.tache_signature_id && (
                   <Link href={`/documents/${d.id}?tache=${d.tache_signature_id}`} className="text-[11px] px-2 py-1 rounded-sm bg-warn-50 text-warn-500 font-medium">
                     À signer

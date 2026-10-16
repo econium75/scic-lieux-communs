@@ -117,8 +117,8 @@ export function PhasesTimeline({ operationId }: { operationId: number }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[10px] uppercase tracking-widest text-ink-500">Suivi de projet</div>
-        <div className="text-[10px] text-ink-500">
+        <div className="text-[11px] uppercase tracking-widest text-ink-500">Suivi de projet</div>
+        <div className="text-[11px] text-ink-500">
           {phases.filter((p) => p.statut === "termine").length} / {phases.length} phases terminées
         </div>
       </div>
@@ -133,12 +133,12 @@ export function PhasesTimeline({ operationId }: { operationId: number }) {
                 <div className={`h-8 w-8 rounded-full ${cfg.bg} border-2 border-paper-200 flex items-center justify-center ${cfg.color}`}>
                   <Icon size={16} />
                 </div>
-                <div className="text-[10px] text-ink-700 text-center mt-1 h-8 leading-tight">{p.nom}</div>
+                <div className="text-[11px] text-ink-700 text-center mt-1 h-8 leading-tight">{p.nom}</div>
                 {isLogged && (
                   <select
                     value={p.statut}
                     onChange={(e) => changeStatus(p, e.target.value)}
-                    className="text-[9px] mt-1 border border-paper-200 rounded-sm px-1 py-0.5 bg-white opacity-0 group-hover:opacity-100 transition"
+                    className="text-[10px] mt-1 border border-paper-200 rounded-sm px-1 py-0.5 bg-white opacity-0 group-hover:opacity-100 transition"
                   >
                     <option value="a_faire">À faire</option>
                     <option value="en_cours">En cours</option>

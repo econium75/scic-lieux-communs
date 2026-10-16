@@ -49,7 +49,7 @@ export default async function ComparePage({
           >
             <ArrowLeft size={12} /> Retour aux scénarios
           </Link>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">
             M5 — Comparaison côte-à-côte
           </div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">
@@ -110,12 +110,12 @@ export default async function ComparePage({
 
       {/* Ventilation par rubrique */}
       <div className="rounded-sm border border-paper-200 bg-white overflow-hidden mb-6">
-        <div className="px-5 py-3 border-b border-paper-200 text-[10px] uppercase tracking-widest text-ink-500">
+        <div className="px-5 py-3 border-b border-paper-200 text-[11px] uppercase tracking-widest text-ink-500">
           Ventilation par rubrique (prix de revient)
         </div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-[10px] uppercase tracking-widest text-ink-500 bg-paper-50">
+            <tr className="text-[11px] uppercase tracking-widest text-ink-500 bg-paper-50">
               <th className="text-left px-5 py-2 font-medium">Rubrique</th>
               <th className="text-right px-5 py-2 font-medium">{sa.nom}</th>
               <th className="text-right px-5 py-2 font-medium">{sb.nom}</th>
@@ -146,7 +146,7 @@ export default async function ComparePage({
       <div className="grid grid-cols-2 gap-6">
         <div className="rounded-sm border border-paper-200 bg-white overflow-hidden">
           <div className="px-4 py-3 border-b border-paper-200 flex items-center justify-between">
-            <div className="text-[10px] uppercase tracking-widest text-ink-500">Alertes — {sa.nom}</div>
+            <div className="text-[11px] uppercase tracking-widest text-ink-500">Alertes — {sa.nom}</div>
             <AlerteCount alertes={sa.bilan.alertes} />
           </div>
           <div>
@@ -157,7 +157,7 @@ export default async function ComparePage({
         </div>
         <div className="rounded-sm border border-paper-200 bg-white overflow-hidden">
           <div className="px-4 py-3 border-b border-paper-200 flex items-center justify-between">
-            <div className="text-[10px] uppercase tracking-widest text-ink-500">Alertes — {sb.nom}</div>
+            <div className="text-[11px] uppercase tracking-widest text-ink-500">Alertes — {sb.nom}</div>
             <AlerteCount alertes={sb.bilan.alertes} />
           </div>
           <div>
@@ -191,14 +191,14 @@ function KpiCompare({
 
   return (
     <div className="rounded-sm border border-paper-200 bg-white p-4">
-      <div className="text-[10px] uppercase tracking-widest text-ink-500">{label}</div>
+      <div className="text-[11px] uppercase tracking-widest text-ink-500">{label}</div>
       <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
         <div>
-          <div className="text-[10px] text-ink-500">A</div>
+          <div className="text-[11px] text-ink-500">A</div>
           <div className="font-serif text-lg text-ink-900">{format(va)}</div>
         </div>
         <div>
-          <div className="text-[10px] text-ink-500">B</div>
+          <div className="text-[11px] text-ink-500">B</div>
           <div className="font-serif text-lg text-ink-900">{format(vb)}</div>
         </div>
       </div>

@@ -71,7 +71,7 @@ export function ReferentielsClient({ initial }: { initial: Ref[] }) {
 
   return (
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-5xl">
-      <div className="text-[10px] uppercase tracking-widest text-ink-500">M1 — Référentiels globaux</div>
+      <div className="text-[11px] uppercase tracking-widest text-ink-500">M1 — Référentiels globaux</div>
       <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1 mb-2">Paramètres</h1>
       <p className="text-sm text-ink-500 mb-6">
         Référentiels partagés par toutes les opérations. L'édition est persistée en base.
@@ -132,8 +132,8 @@ function RefCard({
     <section className="rounded-sm border border-paper-200 bg-white overflow-hidden">
       <div className="px-5 py-3 border-b border-paper-200 flex items-center justify-between">
         <div>
-          <h2 className="text-[10px] uppercase tracking-widest text-ink-500 font-medium">{ref_.label}</h2>
-          <div className="text-[10px] text-ink-500 italic mt-0.5">
+          <h2 className="text-[11px] uppercase tracking-widest text-ink-500 font-medium">{ref_.label}</h2>
+          <div className="text-[11px] text-ink-500 italic mt-0.5">
             Code <code>{ref_.code}</code> · maj {new Date(ref_.updated_at).toLocaleString("fr-FR")}
           </div>
         </div>
@@ -226,7 +226,7 @@ function RefRow({
     return (
       <>
         <tr className="border-t border-paper-200 bg-paper-50">
-          <td colSpan={2} className="px-4 py-1 text-[10px] uppercase tracking-widest text-ink-700 font-medium">
+          <td colSpan={2} className="px-4 py-1 text-[11px] uppercase tracking-widest text-ink-700 font-medium">
             {k}
           </td>
         </tr>

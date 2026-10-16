@@ -62,7 +62,7 @@ export function SensibiliteClient({
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">M5 — Analyse de sensibilité</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">M5 — Analyse de sensibilité</div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Impact d'un paramètre sur les KPIs</h1>
           <p className="text-sm text-ink-500 mt-1">
             Scénario de base : <strong>{scenarioNom}</strong> · Les variations ne modifient pas le scénario stocké.
@@ -72,7 +72,7 @@ export function SensibiliteClient({
 
       {/* Sélecteur */}
       <div className="rounded-sm border border-paper-200 bg-white p-5 mb-6">
-        <div className="text-[10px] uppercase tracking-widest text-ink-500 mb-3">Paramètre à faire varier</div>
+        <div className="text-[11px] uppercase tracking-widest text-ink-500 mb-3">Paramètre à faire varier</div>
         <div className="grid grid-cols-5 gap-2">
           {paramKeys.map((k) => (
             <button
@@ -85,7 +85,7 @@ export function SensibiliteClient({
               }`}
             >
               <div>{sensibiliteParams[k].label}</div>
-              <div className="text-[10px] text-ink-500 mt-1">
+              <div className="text-[11px] text-ink-500 mt-1">
                 {sensibiliteParams[k].default_range[0]} → {sensibiliteParams[k].default_range[1]}
               </div>
             </button>
@@ -108,7 +108,7 @@ export function SensibiliteClient({
         <>
           {/* Chart */}
           <div className="rounded-sm border border-paper-200 bg-white p-5 mb-6">
-            <div className="text-[10px] uppercase tracking-widest text-ink-500 mb-4">
+            <div className="text-[11px] uppercase tracking-widest text-ink-500 mb-4">
               Impact sur marge nette & loyer d'équilibre
             </div>
             <SensibiliteChart rows={result.rows} paramLabel={result.param_label} />
@@ -118,7 +118,7 @@ export function SensibiliteClient({
           <div className="rounded-sm border border-paper-200 bg-white overflow-hidden">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[10px] uppercase tracking-widest text-ink-500 bg-paper-50">
+                <tr className="text-[11px] uppercase tracking-widest text-ink-500 bg-paper-50">
                   <th className="text-left px-4 py-2 font-medium">Valeur</th>
                   <th className="text-right px-4 py-2 font-medium">Prix revient</th>
                   <th className="text-right px-4 py-2 font-medium">Marge brute</th>

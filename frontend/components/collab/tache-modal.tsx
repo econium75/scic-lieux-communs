@@ -171,7 +171,7 @@ export function TacheModal({
             />
           </label>
           {docChoisi && docChoisi.acces === "proprietaire" && destinataires.length > 0 && (
-            <p className="text-[10px] text-ink-500 mt-1">Le document sera partagé avec les destinataires.</p>
+            <p className="text-[11px] text-ink-500 mt-1">Le document sera partagé avec les destinataires.</p>
           )}
         </div>
       </div>

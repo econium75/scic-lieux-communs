@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/format";
+import { cn, espacesLisibles } from "@/lib/format";
 
 // ─── Formatage
 const nf0 = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
@@ -14,13 +14,13 @@ function sansMoinsZero(v: number, decimals: number): number {
 export function eur(v: number | null | undefined, decimals = 0): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
   const x = sansMoinsZero(v, decimals);
-  const s = decimals ? nf2.format(x) : nf0.format(x);
+  const s = espacesLisibles(decimals ? nf2.format(x) : nf0.format(x));
   return `${s} €`;
 }
 export function num(v: number | null | undefined, decimals = 0): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
-  return new Intl.NumberFormat("fr-FR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(
-    sansMoinsZero(v, decimals)
+  return espacesLisibles(
+    new Intl.NumberFormat("fr-FR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(sansMoinsZero(v, decimals))
   );
 }
 export function pct(v: number | null | undefined, decimals = 1): string {
@@ -37,11 +37,13 @@ function parse(txt: string): number | null {
 
 function display(v: number | null | undefined, decimals: number, grouping: boolean): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "";
-  return new Intl.NumberFormat("fr-FR", {
-    maximumFractionDigits: decimals,
-    minimumFractionDigits: 0,
-    useGrouping: grouping,
-  }).format(v);
+  return espacesLisibles(
+    new Intl.NumberFormat("fr-FR", {
+      maximumFractionDigits: decimals,
+      minimumFractionDigits: 0,
+      useGrouping: grouping,
+    }).format(v)
+  );
 }
 
 /**
@@ -199,7 +201,7 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
     <label className="block">
       <span className="block text-[11px] text-ink-700 mb-1 leading-tight">{label}</span>
       {children}
-      {hint && <span className="block text-[10px] text-ink-500 mt-0.5 leading-tight">{hint}</span>}
+      {hint && <span className="block text-[11px] text-ink-500 mt-0.5 leading-tight">{hint}</span>}
     </label>
   );
 }
@@ -282,7 +284,7 @@ export function Kpi({
   const color = { default: "text-ink-900", ok: "text-ok-500", warn: "text-warn-500", danger: "text-danger-500" }[tone];
   return (
     <div className="rounded-sm bg-white border border-paper-200 p-4">
-      <div className="text-[10px] uppercase tracking-widest text-ink-500 leading-tight">{label}</div>
+      <div className="text-[11px] uppercase tracking-widest text-ink-500 leading-tight">{label}</div>
       <div className={cn("font-serif text-xl sm:text-2xl mt-1.5 tabular-nums", color)}>{value}</div>
       {sub && <div className="text-[11px] text-ink-500 mt-0.5">{sub}</div>}
     </div>
@@ -299,6 +301,6 @@ export function ReadOnlyBanner({ children }: { children: React.ReactNode }) {
 }
 
 // Classes de tableau partagées
-export const th = "px-3 py-2 text-[10px] uppercase tracking-widest text-ink-500 font-medium whitespace-nowrap";
+export const th = "px-3 py-2 text-[11px] uppercase tracking-widest text-ink-500 font-medium whitespace-nowrap";
 export const td = "px-3 py-1.5 tabular-nums whitespace-nowrap";
 export const tdNum = "px-3 py-1.5 tabular-nums text-right whitespace-nowrap";

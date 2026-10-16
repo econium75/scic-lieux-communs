@@ -21,7 +21,7 @@ export function TabSynthese({ result, goTo }: TabProps) {
       <ReadOnlyBanner>Synthèse calculée, non modifiable — exportable en Excel (bouton « Exporter l'onglet »).</ReadOnlyBanner>
 
       <div className="mb-4">
-        <div className="text-[10px] uppercase tracking-widest text-ink-500">Synthèse — simulation financière de l'opération</div>
+        <div className="text-[11px] uppercase tracking-widest text-ink-500">Synthèse — simulation financière de l'opération</div>
         <h2 className="font-serif text-xl text-ink-900 mt-0.5">
           {s.titre} <span className="text-ink-500 text-base">(zones {s.zones.zone_123} / {s.zones.zone_abc} · livraison {s.annee_livraison})</span>
         </h2>

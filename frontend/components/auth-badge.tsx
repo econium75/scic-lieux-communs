@@ -52,9 +52,9 @@ export function AuthBadge() {
         <UserCircle size={16} className="text-ink-500" />
         <div className="flex-1 min-w-0">
           <div className="text-xs text-ink-900 font-medium truncate">{user.nom_affichage || user.username}</div>
-          <div className="text-[10px] text-ink-500 truncate">{user.username}</div>
+          <div className="text-[11px] text-ink-500 truncate">{user.username}</div>
         </div>
-        <span className={`text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border ${roleColor}`}>
+        <span className={`text-[10px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border ${roleColor}`}>
           {user.role}
         </span>
       </div>

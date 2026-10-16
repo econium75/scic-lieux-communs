@@ -9,7 +9,7 @@ export default async function DonneesExportsPage() {
 
   return (
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-5xl">
-      <div className="text-[10px] uppercase tracking-widest text-ink-500">M6 — Restitutions</div>
+      <div className="text-[11px] uppercase tracking-widest text-ink-500">M6 — Restitutions</div>
       <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1 mb-2">Données & exports</h1>
       <p className="text-sm text-ink-500 mb-6">
         Génération à la volée des gabarits Excel formatés et des PDF de synthèse pour comité d'engagement.
@@ -45,7 +45,7 @@ export default async function DonneesExportsPage() {
                   </div>
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-[10px] uppercase tracking-widest text-ink-500 bg-paper-50">
+                      <tr className="text-[11px] uppercase tracking-widest text-ink-500 bg-paper-50">
                         <th className="text-left px-5 py-2 font-medium">Scénario</th>
                         <th className="text-left px-5 py-2 font-medium">M2 Bilan</th>
                         <th className="text-left px-5 py-2 font-medium">M3 Exploitation</th>
@@ -58,7 +58,7 @@ export default async function DonneesExportsPage() {
                         <tr key={s.id} className="border-t border-paper-200">
                           <td className="px-5 py-2 text-ink-900">
                             {s.nom}
-                            {s.is_reference && <span className="text-[10px] text-ink-500 ml-2 italic">(référence)</span>}
+                            {s.is_reference && <span className="text-[11px] text-ink-500 ml-2 italic">(référence)</span>}
                           </td>
                           <td className="px-5 py-2">
                             <ExportLink href={`/api/exports/bilan/${s.id}.xlsx`} icon="xlsx" label="Bilan" />

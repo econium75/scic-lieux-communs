@@ -141,7 +141,7 @@ export function OperationsSwitcher({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full px-3 py-2 text-sm rounded-sm bg-white border border-paper-200 hover:border-brand-500 transition text-left"
+        className="w-full px-3 py-2 text-sm rounded-sm bg-surface border border-paper-200 hover:border-brand-500 transition text-left"
       >
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
@@ -155,8 +155,8 @@ export function OperationsSwitcher({
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-paper-200 rounded-sm shadow-lg z-40 max-h-96 overflow-y-auto">
-          <div className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-ink-500 border-b border-paper-200">
+        <div className="theme-clair absolute left-0 right-0 top-full mt-1 bg-white border border-paper-200 rounded-sm shadow-lg z-40 max-h-96 overflow-y-auto">
+          <div className="px-3 py-1.5 text-[11px] uppercase tracking-widest text-ink-500 border-b border-paper-200">
             Changer d'opération
           </div>
           {operations.map((op) => (
@@ -167,7 +167,7 @@ export function OperationsSwitcher({
             >
               <div className="min-w-0 flex-1">
                 <div className="font-medium text-ink-900 truncate">{op.nom}</div>
-                <div className="text-[10px] text-ink-500 truncate">{op.commune} · {op.nb_logements_total} logts</div>
+                <div className="text-[11px] text-ink-500 truncate">{op.commune} · {op.nb_logements_total} logts</div>
               </div>
               {op.id === active.id && <Check size={12} className="text-ok-500 shrink-0" />}
             </button>
@@ -187,7 +187,7 @@ export function OperationsSwitcher({
               </>
             )}
             {!isLogged && (
-              <div className="text-[10px] text-ink-500 italic text-center py-1">
+              <div className="text-[11px] text-ink-500 italic text-center py-1">
                 Connectez-vous pour modifier
               </div>
             )}
@@ -213,7 +213,7 @@ function Modal({
 }) {
   const field = (label: string, k: keyof FormState, type: "number" | "text" = "text") => (
     <label className="block">
-      <span className="text-[10px] uppercase tracking-widest text-ink-500">{label}</span>
+      <span className="text-[11px] uppercase tracking-widest text-ink-500">{label}</span>
       <input
         type={type}
         value={form[k] as string | number}
@@ -226,7 +226,7 @@ function Modal({
   const creation = title === "Nouvelle opération";
   const select = (label: string, k: "zone_123" | "zone_abc", options: { v: string; l: string }[]) => (
     <label className="block">
-      <span className="text-[10px] uppercase tracking-widest text-ink-500">{label}</span>
+      <span className="text-[11px] uppercase tracking-widest text-ink-500">{label}</span>
       <select value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} className="mt-1 w-full px-2 py-1.5 border border-paper-200 rounded-sm text-sm bg-white">
         {options.map((o) => (
           <option key={o.v} value={o.v}>{o.l}</option>
@@ -236,7 +236,7 @@ function Modal({
   );
 
   return (
-    <div className="fixed inset-0 bg-ink-900/60 flex items-center justify-center z-50 p-4">
+    <div className="theme-clair fixed inset-0 bg-ink-900/60 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-sm max-w-xl w-full max-h-[90vh] overflow-y-auto">
         <div className="px-5 py-3 border-b border-paper-200 flex items-center justify-between">
           <h2 className="font-serif text-lg text-ink-900">{title}</h2>

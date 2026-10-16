@@ -20,7 +20,7 @@ export function TabBilanOperation({ result, goTo }: TabProps) {
   );
   const titre = (t: string) => (
     <tr className="border-t border-paper-200 bg-paper-50">
-      <td colSpan={cols.length + 2} className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-ink-500 font-semibold">{t}</td>
+      <td colSpan={cols.length + 2} className="px-3 py-1.5 text-[11px] uppercase tracking-widest text-ink-500 font-semibold">{t}</td>
     </tr>
   );
   const ok = Math.abs(b.controle.total) < 1;

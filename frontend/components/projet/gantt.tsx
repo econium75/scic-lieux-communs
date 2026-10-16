@@ -319,7 +319,7 @@ export function Gantt({
         <div className="relative" style={{ width: L + W, height: HE + lignes.length * H }}>
           {/* En-tête */}
           <div className="sticky top-0 z-20 flex" style={{ height: HE }}>
-            <div className="sticky left-0 z-30 bg-paper-50 border-r border-b border-paper-200 flex items-end text-[10px] uppercase tracking-widest text-ink-500 font-medium overflow-hidden" style={{ width: L, minWidth: L }}>
+            <div className="sticky left-0 z-30 bg-paper-50 border-r border-b border-paper-200 flex items-end text-[11px] uppercase tracking-widest text-ink-500 font-medium overflow-hidden" style={{ width: L, minWidth: L }}>
               {gauche && (
                 <>
                   <div className="w-11 px-2 pb-2">N°</div>
@@ -334,12 +334,12 @@ export function Gantt({
                 <div key={i} className="absolute top-0 h-[26px] border-l border-paper-200 px-1.5 text-[11px] text-ink-700 font-medium leading-[26px] whitespace-nowrap overflow-hidden capitalize" style={{ left: s.l, width: s.w }}>{s.t}</div>
               ))}
               {bas.map((s, i) => (
-                <div key={i} className={cn("absolute top-[26px] h-[26px] border-l border-t border-paper-200 text-[10px] leading-[26px] whitespace-nowrap overflow-hidden text-center", s.we ? "text-ink-300 bg-paper-100" : "text-ink-500")} style={{ left: s.l, width: s.w }}>
+                <div key={i} className={cn("absolute top-[26px] h-[26px] border-l border-t border-paper-200 text-[11px] leading-[26px] whitespace-nowrap overflow-hidden text-center", s.we ? "text-ink-300 bg-paper-100" : "text-ink-500")} style={{ left: s.l, width: s.w }}>
                   {s.t}{s.s && <span className="text-ink-300 ml-0.5">({s.s})</span>}
                 </div>
               ))}
               {auj >= debut && auj <= fin && (
-                <div className="absolute bottom-0 text-[9px] font-semibold text-white bg-danger-500 rounded-sm px-1 -translate-x-1/2" style={{ left: x(auj) + ppd / 2 }}>auj.</div>
+                <div className="absolute bottom-0 text-[10px] font-semibold text-white bg-danger-500 rounded-sm px-1 -translate-x-1/2" style={{ left: x(auj) + ppd / 2 }}>auj.</div>
               )}
             </div>
           </div>
@@ -355,11 +355,11 @@ export function Gantt({
                   <path d="M0,0 L7,3.5 L0,7 z" fill="#d4a017" />
                 </marker>
                 <marker id="fleche-active" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-                  <path d="M0,0 L7,3.5 L0,7 z" fill="#1f3a68" />
+                  <path d="M0,0 L7,3.5 L0,7 z" fill="#343aab" />
                 </marker>
               </defs>
               {fleches.map((f, i) => (
-                <path key={i} d={f.d} fill="none" stroke={f.actif ? "#1f3a68" : "#e0b84a"} strokeWidth={f.actif ? 2 : 1.4} markerEnd={`url(#${f.actif ? "fleche-active" : "fleche"})`} />
+                <path key={i} d={f.d} fill="none" stroke={f.actif ? "#343aab" : "#e0b84a"} strokeWidth={f.actif ? 2 : 1.4} markerEnd={`url(#${f.actif ? "fleche-active" : "fleche"})`} />
               ))}
             </svg>
           </div>
@@ -385,7 +385,7 @@ export function Gantt({
                       <button onClick={() => basculer(l.key)} className="flex-1 min-w-0 px-1 flex items-center gap-1 text-left font-semibold text-ink-900">
                         {l.ouvert ? <ChevronDown size={14} className="shrink-0 text-ink-500" /> : <ChevronRight size={14} className="shrink-0 text-ink-500" />}
                         <span className="truncate">{l.phase ? l.phase.nom : "Sans phase"}</span>
-                        {l.phase && <span className="text-[10px] text-ink-500 font-normal ml-1 shrink-0">{l.phase.avancement} %</span>}
+                        {l.phase && <span className="text-[11px] text-ink-500 font-normal ml-1 shrink-0">{l.phase.avancement} %</span>}
                       </button>
                       {!etroit && <div className="w-[88px] px-2">{l.phase?.responsable ? <Avatars users={[l.phase.responsable]} noms={noms} /> : null}</div>}
                       {!etroit && <div className="w-[100px] px-2">{l.phase && <StatutPoint statut={l.phase.statut} />}</div>}

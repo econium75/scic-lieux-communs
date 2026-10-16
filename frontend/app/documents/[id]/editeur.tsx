@@ -322,7 +322,7 @@ export function EditeurDocument({ id }: { id: number }) {
                 <li key={s.id} className="px-4 py-2 text-xs">
                   <div className="text-ink-900 font-medium flex items-center gap-1"><Check size={11} className="text-ok-500" /> {s.nom_affichage || s.signataire}</div>
                   <div className="text-ink-500">{fmtDateHeure(s.signed_at)} · v{s.version_numero} · p. {s.pages.map((p) => p + 1).join(", ")}</div>
-                  <div className="text-[10px] text-ink-300 font-mono break-all">SHA-256 {s.sha256.slice(0, 24)}…</div>
+                  <div className="text-[11px] text-ink-300 font-mono break-all">SHA-256 {s.sha256.slice(0, 24)}…</div>
                 </li>
               ))}
             </ul>
@@ -376,7 +376,7 @@ export function EditeurDocument({ id }: { id: number }) {
 function Panneau({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (
     <section className="rounded-sm border border-paper-200 bg-white overflow-hidden">
-      <div className="px-4 py-2 text-[10px] uppercase tracking-widest text-ink-500 border-b border-paper-200">{titre}</div>
+      <div className="px-4 py-2 text-[11px] uppercase tracking-widest text-ink-500 border-b border-paper-200">{titre}</div>
       {children}
     </section>
   );
@@ -539,7 +539,7 @@ function PageVue({
                   {a.type === "texte" && (
                     <div className="absolute -top-8 left-0 flex items-center gap-1 bg-white border border-paper-200 rounded-sm shadow px-1 py-0.5" onPointerDown={(e) => e.stopPropagation()}>
                       {[9, 11, 14, 18].map((t) => (
-                        <button key={t} onClick={() => onMaj(a.id, { taille: t })} className={cn("text-[10px] px-1.5 rounded-sm", (a.taille || 11) === t ? "bg-brand-500 text-white" : "text-ink-700 hover:bg-paper-100")}>{t}</button>
+                        <button key={t} onClick={() => onMaj(a.id, { taille: t })} className={cn("text-[11px] px-1.5 rounded-sm", (a.taille || 11) === t ? "bg-brand-500 text-white" : "text-ink-700 hover:bg-paper-100")}>{t}</button>
                       ))}
                     </div>
                   )}

@@ -159,7 +159,7 @@ export function SimulateurClient({ opId, initial }: { opId: number; initial: Sim
       {/* En-tête */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">
             Montage financier · <Link href={`/operations/${opId}`} className="hover:underline">{saved.operation.code}</Link>
           </div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-0.5 truncate">
@@ -245,14 +245,14 @@ export function SimulateurClient({ opId, initial }: { opId: number; initial: Sim
                   actif ? "border-brand-500 text-ink-900 font-medium" : "border-transparent text-ink-500 hover:text-ink-900"
                 )}
               >
-                <span className={cn("text-[10px] w-4 h-4 rounded-full inline-flex items-center justify-center", actif ? "bg-brand-500 text-white" : "bg-paper-200 text-ink-700")}>
+                <span className={cn("text-[11px] w-4 h-4 rounded-full inline-flex items-center justify-center", actif ? "bg-brand-500 text-white" : "bg-paper-200 text-ink-700")}>
                   {o.num}
                 </span>
                 <span className="hidden md:inline">{o.label}</span>
                 <span className="md:hidden">{o.court}</span>
                 {!o.editable && <Lock size={11} className="text-ink-300" aria-label="non modifiable" />}
                 {n ? (
-                  <span className="text-[10px] px-1 rounded-sm bg-warn-50 text-warn-500 inline-flex items-center gap-0.5">
+                  <span className="text-[11px] px-1 rounded-sm bg-warn-50 text-warn-500 inline-flex items-center gap-0.5">
                     <AlertTriangle size={9} />
                     {n}
                   </span>

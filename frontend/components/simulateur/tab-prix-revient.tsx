@@ -83,7 +83,7 @@ export function TabPrixRevient({ opId, data, result, update, replace, canEdit }:
                 {cols.map((p) => (
                   <th key={p} className={`${th} text-right min-w-[120px]`}>
                     {p}
-                    <span className="block normal-case tracking-normal text-[10px] text-ink-300">{pp[p].nb} logts</span>
+                    <span className="block normal-case tracking-normal text-[11px] text-ink-300">{pp[p].nb} logts</span>
                   </th>
                 ))}
                 <th className={`${th} text-right min-w-[120px]`}>Total</th>
@@ -101,7 +101,7 @@ export function TabPrixRevient({ opId, data, result, update, replace, canEdit }:
                 {canEdit && <td />}
               </tr>
               <tr className="border-t border-paper-200 text-ink-700">
-                <td className={td}>Taux de TVA non récupérable <span className="text-[10px] text-ink-500">(onglet Hypothèses)</span></td>
+                <td className={td}>Taux de TVA non récupérable <span className="text-[11px] text-ink-500">(onglet Hypothèses)</span></td>
                 {cols.map((p) => <td key={p} className={tdNum}>{pct(pr.taux_tva[p])}</td>)}
                 <td />
                 {canEdit && <td />}
@@ -179,7 +179,7 @@ function RubriqueBloc({
             ) : (
               <span className="text-ink-700">
                 {l.libelle}
-                {l.custom && <span className="ml-2 text-[10px] text-brand-500">ligne ajoutée</span>}
+                {l.custom && <span className="ml-2 text-[11px] text-brand-500">ligne ajoutée</span>}
               </span>
             )}
           </td>

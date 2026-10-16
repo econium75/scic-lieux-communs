@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="80" fill="#1F3A68"/>
-  <text x="256" y="356" font-family="Georgia, serif" font-size="320" font-weight="bold" text-anchor="middle" fill="#ffffff">T</text>
+  <rect width="512" height="512" rx="96" fill="#4B52D6"/>
+  <rect x="136" y="132" width="240" height="60" rx="6" fill="#ffffff"/>
+  <rect x="224" y="132" width="64" height="248" rx="6" fill="#ffffff"/>
 </svg>

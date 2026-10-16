@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import { Public_Sans } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 import { PWARegister } from "@/components/pwa-register";
+
+// Police auto-hébergée par Next (aucun appel à Google depuis le navigateur des utilisateurs)
+const publicSans = Public_Sans({ subsets: ["latin"], variable: "--font-public-sans", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Téo — SCIC",
@@ -20,7 +24,7 @@ export const metadata: Metadata = {
       { url: "/icon.svg", type: "image/svg+xml" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
-    other: [{ rel: "mask-icon", url: "/icon.svg", color: "#1F3A68" }],
+    other: [{ rel: "mask-icon", url: "/icon.svg", color: "#121A2B" }],
   },
 };
 
@@ -30,8 +34,8 @@ export const viewport: Viewport = {
   maximumScale: 5,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafaf7" },
-    { media: "(prefers-color-scheme: dark)", color: "#1F3A68" },
+    { media: "(prefers-color-scheme: light)", color: "#121A2B" },
+    { media: "(prefers-color-scheme: dark)", color: "#121A2B" },
   ],
 };
 
@@ -39,7 +43,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={publicSans.variable}>
       <body className="min-h-screen">
         <PWARegister />
         <AppShell>{children}</AppShell>

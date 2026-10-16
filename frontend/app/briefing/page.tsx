@@ -80,7 +80,7 @@ export default function BriefingPage() {
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-5xl">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500 flex items-center gap-2">
+          <div className="text-[11px] uppercase tracking-widest text-ink-500 flex items-center gap-2">
             <Mic size={11} /> Briefing podcast
           </div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Votre briefing quotidien</h1>
@@ -114,7 +114,7 @@ export default function BriefingPage() {
                 <div className="flex items-center gap-3">
                   <Headphones size={28} className="text-brand-700" />
                   <div className="flex-1">
-                    <div className="text-[10px] uppercase tracking-widest text-ink-500">{selected.jour}</div>
+                    <div className="text-[11px] uppercase tracking-widest text-ink-500">{selected.jour}</div>
                     <h2 className="font-serif text-lg text-ink-900">{selected.titre}</h2>
                     <div className="text-xs text-ink-500 mt-0.5">
                       Durée estimée {Math.floor(selected.duree_estimee_sec / 60)}:{String(selected.duree_estimee_sec % 60).padStart(2, "0")}
@@ -133,7 +133,7 @@ export default function BriefingPage() {
                     Audio en cours de chargement…
                   </div>
                 )}
-                <div className="text-[10px] uppercase tracking-widest text-ink-500 mb-2">Script</div>
+                <div className="text-[11px] uppercase tracking-widest text-ink-500 mb-2">Script</div>
                 <p className="text-sm text-ink-700 leading-relaxed whitespace-pre-wrap">{selected.script_texte}</p>
               </div>
             </div>
@@ -152,7 +152,7 @@ export default function BriefingPage() {
           <div className="rounded-sm border border-paper-200 bg-white overflow-hidden">
             <div className="px-4 py-3 border-b border-paper-200 flex items-center gap-2">
               <Calendar size={11} className="text-ink-500" />
-              <div className="text-[10px] uppercase tracking-widest text-ink-500 font-medium">Historique 14 jours</div>
+              <div className="text-[11px] uppercase tracking-widest text-ink-500 font-medium">Historique 14 jours</div>
             </div>
             <div className="max-h-96 overflow-y-auto">
               {history.length === 0 && (
@@ -165,8 +165,8 @@ export default function BriefingPage() {
                   className={`w-full text-left px-4 py-2 border-b border-paper-200 last:border-b-0 hover:bg-paper-50 ${selected?.id === b.id ? "bg-brand-50/40" : ""}`}
                 >
                   <div className="text-xs text-ink-900 font-medium">{b.jour}</div>
-                  <div className="text-[10px] text-ink-500 truncate">{b.titre}</div>
-                  <div className="text-[10px] text-ink-500 mt-0.5">
+                  <div className="text-[11px] text-ink-500 truncate">{b.titre}</div>
+                  <div className="text-[11px] text-ink-500 mt-0.5">
                     {Math.floor(b.duree_estimee_sec / 60)}:{String(b.duree_estimee_sec % 60).padStart(2, "0")}
                     {b.lu && " · ✓"}
                   </div>

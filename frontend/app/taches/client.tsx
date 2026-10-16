@@ -90,7 +90,7 @@ export function TachesClient() {
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-7xl">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500 flex items-center gap-2">
+          <div className="text-[11px] uppercase tracking-widest text-ink-500 flex items-center gap-2">
             <ClipboardList size={11} /> Équipe
           </div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Mes tâches</h1>
@@ -122,7 +122,7 @@ export function TachesClient() {
               className={cn("px-4 py-1.5 text-sm inline-flex items-center gap-2", boite === k ? "bg-brand-500 text-white" : "text-ink-700 hover:bg-paper-50")}
             >
               {l}
-              {n > 0 && <span className={cn("text-[10px] px-1.5 rounded-full", boite === k ? "bg-white/25" : "bg-paper-200")}>{n}</span>}
+              {n > 0 && <span className={cn("text-[11px] px-1.5 rounded-full", boite === k ? "bg-white/25" : "bg-paper-200")}>{n}</span>}
             </button>
           ))}
         </div>
@@ -164,7 +164,7 @@ export function TachesClient() {
                     <div className="flex items-center gap-2 mb-1">
                       <BadgeType type={t.type_tache} />
                       {t.priorite !== "normale" && (
-                        <span className={cn("text-[10px] font-semibold uppercase", t.priorite === "urgente" ? "text-danger-500" : "text-warn-500")}>{t.priorite}</span>
+                        <span className={cn("text-[11px] font-semibold uppercase", t.priorite === "urgente" ? "text-danger-500" : "text-warn-500")}>{t.priorite}</span>
                       )}
                       <span className="ml-auto"><BadgeStatut t={t} /></span>
                     </div>
@@ -340,7 +340,7 @@ function Detail({ t, onFermer, onAction, onErreur }: { t: Tache; onFermer: () =>
           )}
         </div>
       )}
-      <p className="px-5 pb-4 text-[10px] text-ink-300">{LIBELLES_TYPE[t.type_tache]} n° {t.id}</p>
+      <p className="px-5 pb-4 text-[11px] text-ink-300">{LIBELLES_TYPE[t.type_tache]} n° {t.id}</p>
     </div>
   );
 }

@@ -7,7 +7,7 @@ export function Brand({ taille = "normal" }: { taille?: "compact" | "normal" | "
   const carre = { compact: "h-7 w-7 text-base", normal: "h-10 w-10 text-xl", grand: "h-12 w-12 text-2xl" }[taille];
   return (
     <div className="flex items-center gap-3">
-      <div className={cn("rounded-sm bg-brand-700 text-white flex items-center justify-center font-serif font-bold shrink-0", carre)} aria-hidden>
+      <div className={cn("rounded-sm bg-brand-500 text-white flex items-center justify-center font-serif font-bold shrink-0", carre)} aria-hidden>
         T
       </div>
       <div className="leading-tight">

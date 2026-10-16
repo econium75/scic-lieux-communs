@@ -75,7 +75,7 @@ export function ImportModal({
           {extraFields && <div className="mb-4">{extraFields}</div>}
 
           <label className="block mb-4">
-            <span className="text-[10px] uppercase tracking-widest text-ink-500">Fichier</span>
+            <span className="text-[11px] uppercase tracking-widest text-ink-500">Fichier</span>
             <input
               ref={inputRef}
               type="file"

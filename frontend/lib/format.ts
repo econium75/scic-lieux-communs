@@ -1,3 +1,8 @@
+/** fr-FR sépare les milliers par une espace fine, presque invisible à l'écran : on la remplace par une espace insécable. */
+export function espacesLisibles(s: string): string {
+  return s.replace(/ /g, " ");
+}
+
 export function formatEuro(v: number, opts: { compact?: boolean; decimals?: number } = {}): string {
   const { compact = false, decimals = 0 } = opts;
   if (compact) {
@@ -5,12 +10,12 @@ export function formatEuro(v: number, opts: { compact?: boolean; decimals?: numb
     if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)} k€`;
     return `${v.toFixed(decimals)} €`;
   }
-  return new Intl.NumberFormat("fr-FR", {
+  return espacesLisibles(new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: decimals,
     minimumFractionDigits: decimals,
-  }).format(v);
+  }).format(v));
 }
 
 export function formatPct(v: number, decimals = 1): string {
@@ -18,10 +23,10 @@ export function formatPct(v: number, decimals = 1): string {
 }
 
 export function formatNumber(v: number, decimals = 0): string {
-  return new Intl.NumberFormat("fr-FR", {
+  return espacesLisibles(new Intl.NumberFormat("fr-FR", {
     maximumFractionDigits: decimals,
     minimumFractionDigits: decimals,
-  }).format(v);
+  }).format(v));
 }
 
 export function cn(...classes: (string | false | null | undefined)[]): string {

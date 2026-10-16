@@ -57,7 +57,7 @@ export function AuditClient({ initial, actions }: { initial: AuditData | null; a
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">M7 — Journal d'audit</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">M7 — Journal d'audit</div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Historique des opérations</h1>
           <p className="text-sm text-ink-500 mt-1">
             Traçabilité des calculs, modifications et exports — essentielle pour les financeurs et ANRU.
@@ -75,7 +75,7 @@ export function AuditClient({ initial, actions }: { initial: AuditData | null; a
       <div className="rounded-sm border border-paper-200 bg-white p-4 mb-6">
         <div className="grid grid-cols-4 gap-3 items-end">
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-ink-500">Action</span>
+            <span className="text-[11px] uppercase tracking-widest text-ink-500">Action</span>
             <select
               value={actionFilter}
               onChange={(e) => setAction(e.target.value)}
@@ -88,7 +88,7 @@ export function AuditClient({ initial, actions }: { initial: AuditData | null; a
             </select>
           </label>
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-ink-500">Type cible</span>
+            <span className="text-[11px] uppercase tracking-widest text-ink-500">Type cible</span>
             <select
               value={targetTypeFilter}
               onChange={(e) => setTargetType(e.target.value)}
@@ -100,7 +100,7 @@ export function AuditClient({ initial, actions }: { initial: AuditData | null; a
             </select>
           </label>
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-ink-500">Depuis N jours</span>
+            <span className="text-[11px] uppercase tracking-widest text-ink-500">Depuis N jours</span>
             <input
               type="number"
               placeholder="ex: 7"
@@ -123,7 +123,7 @@ export function AuditClient({ initial, actions }: { initial: AuditData | null; a
       <div className="rounded-sm border border-paper-200 bg-white overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-[10px] uppercase tracking-widest text-ink-500 bg-paper-50">
+            <tr className="text-[11px] uppercase tracking-widest text-ink-500 bg-paper-50">
               <th className="text-left px-4 py-2 font-medium">Horodatage UTC</th>
               <th className="text-left px-4 py-2 font-medium">Utilisateur</th>
               <th className="text-left px-4 py-2 font-medium">Action</th>
@@ -148,7 +148,7 @@ export function AuditClient({ initial, actions }: { initial: AuditData | null; a
                   </td>
                   <td className="px-4 py-1.5 text-ink-700">{r.user}</td>
                   <td className="px-4 py-1.5">
-                    <span className={`inline-block px-2 py-0.5 text-[10px] font-medium rounded-sm border ${color}`}>
+                    <span className={`inline-block px-2 py-0.5 text-[11px] font-medium rounded-sm border ${color}`}>
                       {r.action}
                     </span>
                   </td>

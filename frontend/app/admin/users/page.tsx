@@ -83,7 +83,7 @@ export default function AdminUsersPage() {
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-5xl">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">Administration</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">Administration</div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Utilisateurs & autorisations</h1>
           <p className="text-sm text-ink-500 mt-1">
             3 rôles : <strong>admin</strong> (tout) · <strong>saisie</strong> (CRUD + exports) · <strong>lecture</strong> (lecture + exports).
@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
 
       {creating && (
         <div className="rounded-sm border border-brand-500/30 bg-brand-50/40 p-4 mb-4">
-          <div className="text-[10px] uppercase tracking-widest text-ink-500 mb-3">Création</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500 mb-3">Création</div>
           <div className="grid grid-cols-5 gap-3">
             <input placeholder="username" value={newUser.username} onChange={(e) => setNewUser({ ...newUser, username: e.target.value })} className="px-2 py-1.5 border border-paper-200 rounded-sm text-sm" />
             <input type="password" placeholder="mot de passe" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="px-2 py-1.5 border border-paper-200 rounded-sm text-sm" />
@@ -127,7 +127,7 @@ export default function AdminUsersPage() {
       <div className="rounded-sm border border-paper-200 bg-white overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-[10px] uppercase tracking-widest text-ink-500 bg-paper-50">
+            <tr className="text-[11px] uppercase tracking-widest text-ink-500 bg-paper-50">
               <th className="text-left px-4 py-2 font-medium">Username</th>
               <th className="text-left px-4 py-2 font-medium">Nom affichage</th>
               <th className="text-left px-4 py-2 font-medium">Email</th>
@@ -159,7 +159,7 @@ export default function AdminUsersPage() {
                       <option value="admin">admin</option>
                     </select>
                   ) : (
-                    <span className={`text-[10px] uppercase tracking-widest font-medium px-2 py-0.5 rounded-sm border ${
+                    <span className={`text-[11px] uppercase tracking-widest font-medium px-2 py-0.5 rounded-sm border ${
                       u.role === "admin" ? "bg-brand-50 text-brand-700 border-brand-500/30" :
                       u.role === "saisie" ? "bg-ok-50 text-ok-500 border-ok-500/30" :
                       "bg-paper-100 text-ink-500 border-paper-200"

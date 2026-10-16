@@ -75,7 +75,7 @@ export function NotificationsBell({ variante = "menu" }: { variante?: "menu" | "
   };
 
   const pastille = unread > 0 && (
-    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-danger-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-danger-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
       {unread > 9 ? "9+" : unread}
     </span>
   );
@@ -94,21 +94,21 @@ export function NotificationsBell({ variante = "menu" }: { variante?: "menu" | "
             {pastille}
           </div>
           <span>Notifications</span>
-          {unread > 0 && <span className="ml-auto text-[10px] text-danger-500 font-medium">{unread} non lue{unread > 1 ? "s" : ""}</span>}
+          {unread > 0 && <span className="ml-auto text-[11px] text-danger-500 font-medium">{unread} non lue{unread > 1 ? "s" : ""}</span>}
         </button>
       )}
 
       {open && (
         <div
           className={cn(
-            "absolute bg-white border border-paper-200 rounded-sm shadow-lg z-50 max-h-[70vh] flex flex-col",
+            "theme-clair absolute bg-white border border-paper-200 rounded-sm shadow-lg z-50 max-h-[70vh] flex flex-col",
             variante === "entete" ? "right-0 top-full mt-2 w-[min(22rem,calc(100vw-1.5rem))]" : "left-full ml-2 bottom-0 w-80"
           )}
         >
           <div className="px-3 py-2 border-b border-paper-200 flex items-center justify-between">
-            <div className="text-[10px] uppercase tracking-widest text-ink-500 font-medium">Notifications</div>
+            <div className="text-[11px] uppercase tracking-widest text-ink-500 font-medium">Notifications</div>
             {unread > 0 && (
-              <button onClick={markAll} className="text-[10px] text-brand-500 hover:underline flex items-center gap-1">
+              <button onClick={markAll} className="text-[11px] text-brand-500 hover:underline flex items-center gap-1">
                 <CheckCheck size={11} /> Tout marquer lu
               </button>
             )}
@@ -124,7 +124,7 @@ export function NotificationsBell({ variante = "menu" }: { variante?: "menu" | "
                   <button onClick={() => ouvrir(n)} className="flex-1 min-w-0 text-left" disabled={!n.url_action && n.lue}>
                     <div className={cn("text-xs text-ink-900", !n.lue && "font-semibold")}>{n.titre}</div>
                     {n.message && <div className="text-[11px] text-ink-700 mt-0.5">{n.message}</div>}
-                    <div className="text-[10px] text-ink-500 mt-1">
+                    <div className="text-[11px] text-ink-500 mt-1">
                       {n.emise_par === "system" ? "rappel automatique" : `par ${n.emise_par}`} · {fmtDateHeure(n.at)}
                       {n.url_action && <span className="text-brand-500 ml-1">· ouvrir →</span>}
                     </div>

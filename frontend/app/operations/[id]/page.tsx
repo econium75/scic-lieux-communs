@@ -24,7 +24,7 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">Tableau de bord · {sim.operation.code}</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">Tableau de bord · {sim.operation.code}</div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">{sim.data.hypotheses.nom_operation || sim.operation.nom}</h1>
           <p className="text-sm text-ink-500 mt-1">
             {sim.data.hypotheses.commune || sim.operation.commune} · zones {s.zones.zone_123} / {s.zones.zone_abc} · livraison {s.annee_livraison}
@@ -66,7 +66,7 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
         <div className="lg:col-span-3 rounded-sm border border-paper-200 bg-white p-5">
-          <div className="text-[10px] uppercase tracking-widest text-ink-500 mb-3">Montage financier — accès direct</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500 mb-3">Montage financier — accès direct</div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {ONGLETS.map((o) => (
               <Link
@@ -74,14 +74,14 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
                 href={`/operations/${opId}/simulateur?onglet=${o.key}`}
                 className="rounded-sm border border-paper-200 px-3 py-2 hover:border-brand-500 hover:bg-brand-50 transition"
               >
-                <div className="text-[10px] text-ink-500">Onglet {o.num}</div>
+                <div className="text-[11px] text-ink-500">Onglet {o.num}</div>
                 <div className="text-sm text-ink-900">{o.label}</div>
               </Link>
             ))}
           </div>
         </div>
         <div className="lg:col-span-2 rounded-sm border border-paper-200 bg-white overflow-hidden">
-          <div className="px-4 py-3 border-b border-paper-200 text-[10px] uppercase tracking-widest text-ink-500">
+          <div className="px-4 py-3 border-b border-paper-200 text-[11px] uppercase tracking-widest text-ink-500">
             Points d'attention ({alertes.length})
           </div>
           {alertes.length === 0 && <div className="px-4 py-3 text-sm text-ok-500">Aucune alerte.</div>}
@@ -103,7 +103,7 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
       {planning && (
         <div className="rounded-sm border border-paper-200 bg-white p-5 mb-6">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <div className="text-[10px] uppercase tracking-widest text-ink-500">Gestion de projet</div>
+            <div className="text-[11px] uppercase tracking-widest text-ink-500">Gestion de projet</div>
             <div className="flex items-center gap-3 text-[11px]">
               <Link href={`/operations/${opId}/projet?vue=gantt`} className="text-brand-500 hover:underline">Diagramme de Gantt →</Link>
               <Link href={`/operations/${opId}/projet?vue=phases`} className="text-brand-500 hover:underline">Suivi des phases →</Link>
@@ -127,7 +127,7 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
                 {planning.phases.map((ph) => (
                   <div key={ph.id} className="text-center">
                     <div className={`mx-auto h-2 rounded-full ${ph.statut === "termine" ? "bg-ok-500" : ph.statut === "en_cours" ? "bg-warn-500" : ph.statut === "bloque" ? "bg-danger-500" : "bg-paper-200"}`} />
-                    <div className="text-[10px] text-ink-700 mt-1 leading-tight">{ph.nom}</div>
+                    <div className="text-[11px] text-ink-700 mt-1 leading-tight">{ph.nom}</div>
                   </div>
                 ))}
               </div>
@@ -151,7 +151,7 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
       {sim.result.programme.total.nb_locatif > 0 && (
         <div className="rounded-sm border border-paper-200 bg-white p-5">
           <div className="flex items-center justify-between mb-4">
-            <div className="text-[10px] uppercase tracking-widest text-ink-500">
+            <div className="text-[11px] uppercase tracking-widest text-ink-500">
               Exploitation locative — projection {sim.result.exploitation.kpis.nb_annees} ans
             </div>
             <Link href={`/operations/${opId}/simulateur?onglet=exploitation`} className="text-[11px] text-brand-500 hover:underline">

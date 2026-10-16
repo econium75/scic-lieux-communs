@@ -24,7 +24,7 @@ export async function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 shrink-0 border-r border-paper-200 bg-paper-50 min-h-screen px-5 py-6 flex flex-col gap-6">
+    <aside className="rail-sombre w-64 shrink-0 bg-paper-50 min-h-screen px-5 py-6 flex flex-col gap-6">
       <Link href="/" aria-label="Téo — accueil">
         <Brand />
       </Link>
@@ -49,7 +49,7 @@ export async function Sidebar() {
           <NotificationsBell />
           <AuthBadge />
         </div>
-        <div className="text-[10px] text-ink-300 flex items-center justify-between">
+        <div className="text-[11px] text-ink-300 flex items-center justify-between">
           <span>Téo v1.1</span>
         </div>
       </div>
@@ -58,7 +58,7 @@ export async function Sidebar() {
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium">{children}</div>;
+  return <div className="text-[11px] tracking-widest text-ink-500 uppercase font-medium">{children}</div>;
 }
 
 function NavLink({ href, label, icon: Icon }: { href: string; label: string; icon: typeof Sliders }) {

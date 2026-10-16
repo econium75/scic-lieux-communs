@@ -113,7 +113,7 @@ export function TabReservations({ data, result, update, canEdit }: TabProps) {
                   <td className="px-1.5 py-1 min-w-[90px]"><Select value={row.typologie} onChange={(v) => set(i, "typologie", v)} options={TYPOLOGIES} disabled={!canEdit} /></td>
                   <td className="px-1.5 py-1 min-w-[85px]">
                     <Select value={row.produit} onChange={(v) => set(i, "produit", v)} options={PRODUITS} disabled={!canEdit} />
-                    {pp[row.produit as keyof typeof pp]?.nb === 0 && <span className="text-[10px] text-warn-500">absent du programme</span>}
+                    {pp[row.produit as keyof typeof pp]?.nb === 0 && <span className="text-[11px] text-warn-500">absent du programme</span>}
                   </td>
                   <td className="px-1.5 py-1 min-w-[210px]"><Select value={row.categorie} onChange={(v) => set(i, "categorie", v)} options={CATEGORIES_RESERVATAIRES} disabled={!canEdit} /></td>
                   <td className="px-1.5 py-1 min-w-[190px]"><TextInput value={row.reservataire} onChange={(v) => set(i, "reservataire", v)} disabled={!canEdit} placeholder="ex. Préfecture, Ville…" /></td>

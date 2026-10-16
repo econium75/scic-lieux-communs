@@ -106,7 +106,7 @@ export function TabFinancement({ data, result, update, canEdit }: TabProps) {
                       <tr key={id} className="border-t border-paper-200">
                         <td className={`${td} text-ink-700 pl-6 whitespace-normal`}>
                           {c.libelle}
-                          <span className="text-[10px] text-ink-500">{conditions}</span>
+                          <span className="text-[11px] text-ink-500">{conditions}</span>
                         </td>
                         {cols.map((p) => {
                           const auto = c.auto && (saisies[p] === null || saisies[p] === undefined);
@@ -170,7 +170,7 @@ export function TabFinancement({ data, result, update, canEdit }: TabProps) {
                         ) : (
                           <span className="text-ink-700">
                             {c.libelle}{" "}
-                            <span className="text-[10px] text-ink-500">
+                            <span className="text-[11px] text-ink-500">
                               ({NATURES.find((n) => n.value === c.nature)?.label}
                               {c.nature === "pret" ? ` — ${pct(c.taux, 2)} / ${c.duree} ans` : ""})
                             </span>
@@ -322,7 +322,7 @@ function GroupRows({ titre, colSpan, children }: { titre: string; colSpan: numbe
   return (
     <>
       <tr className="border-t border-paper-200 bg-paper-50">
-        <td colSpan={colSpan} className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-ink-500 font-semibold">
+        <td colSpan={colSpan} className="px-3 py-1.5 text-[11px] uppercase tracking-widest text-ink-500 font-semibold">
           {titre}
         </td>
       </tr>

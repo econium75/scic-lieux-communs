@@ -70,7 +70,7 @@ export function ProjetClient({ opId }: { opId: number }) {
     <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-[1600px]">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">Gestion de projet · {planning.operation.code}</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">Gestion de projet · {planning.operation.code}</div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-0.5">{planning.operation.nom}</h1>
           <p className="text-xs text-ink-500 mt-1">
             {p.debut && p.fin ? `Du ${fmtJour(p.debut)} au ${fmtJour(p.fin)}` : "Aucune date planifiée"}
@@ -141,7 +141,7 @@ export function ProjetClient({ opId }: { opId: number }) {
 function Indic({ icon: I, l, v, alerte }: { icon: typeof Clock; l: string; v: string; alerte?: boolean }) {
   return (
     <div className={cn("rounded-sm border bg-white px-3 py-1.5 min-w-[96px]", alerte ? "border-danger-500/40" : "border-paper-200")}>
-      <div className="text-[10px] uppercase tracking-widest text-ink-500 flex items-center gap-1"><I size={10} /> {l}</div>
+      <div className="text-[11px] uppercase tracking-widest text-ink-500 flex items-center gap-1"><I size={10} /> {l}</div>
       <div className={cn("font-serif text-lg", alerte ? "text-danger-500" : "text-ink-900")}>{v}</div>
     </div>
   );

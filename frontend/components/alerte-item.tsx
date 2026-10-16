@@ -35,7 +35,7 @@ export function AlerteItem({ alerte }: { alerte: Alerte }) {
         <div className="text-sm text-ink-900 font-medium">{alerte.titre}</div>
         <div className="text-xs text-ink-500 mt-0.5">{alerte.detail}</div>
       </div>
-      <div className={`text-[10px] font-bold tracking-widest ${config.text}`}>{config.label}</div>
+      <div className={`text-[11px] font-bold tracking-widest ${config.text}`}>{config.label}</div>
     </div>
   );
 }

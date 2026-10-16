@@ -82,10 +82,10 @@ export function Kanban({
                       className={cn("rounded-sm border bg-white p-2.5 shadow-sm hover:border-brand-500 cursor-pointer", retard ? "border-danger-500/60" : "border-paper-200")}
                     >
                       <div className="flex items-start gap-2">
-                        <span className="text-[10px] text-ink-500 mt-0.5 shrink-0">{num.get(`t${t.id}`)}</span>
+                        <span className="text-[11px] text-ink-500 mt-0.5 shrink-0">{num.get(`t${t.id}`)}</span>
                         <span className="text-sm text-ink-900 leading-snug flex-1">{t.type === "jalon" && <span className="text-fuchsia-600 mr-1">◆</span>}{t.titre}</span>
                       </div>
-                      {t.phase_id && <div className="text-[10px] uppercase tracking-widest text-ink-500 mt-1">{nomsPhases[t.phase_id]}</div>}
+                      {t.phase_id && <div className="text-[11px] uppercase tracking-widest text-ink-500 mt-1">{nomsPhases[t.phase_id]}</div>}
                       {t.type === "tache" && (
                         <div className="h-1.5 rounded-full bg-paper-100 mt-2 overflow-hidden">
                           <div className="h-full" style={{ width: `${t.avancement}%`, background: STATUTS[t.statut].plein }} />

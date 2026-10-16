@@ -24,7 +24,7 @@ export function ImportsClient({
   return (
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-5xl">
       <div className="mb-6">
-        <div className="text-[10px] uppercase tracking-widest text-ink-500">Imports</div>
+        <div className="text-[11px] uppercase tracking-widest text-ink-500">Imports</div>
         <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Importer des données</h1>
         <p className="text-sm text-ink-500 mt-1">
           Centralise tous les imports pour l'opération <strong>{operationNom}</strong> :
@@ -76,7 +76,7 @@ export function ImportsClient({
       {/* Référentiels globaux — lien externe */}
       <div className="rounded-sm border border-paper-200 bg-paper-50/60 p-5 mb-6 flex items-center justify-between">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">Référentiels globaux</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">Référentiels globaux</div>
           <h3 className="text-sm text-ink-900 font-medium mt-0.5">Plafonds BRS/PLS, taux, FiLoSoFi…</h3>
           <p className="text-xs text-ink-500 mt-1">
             Les référentiels sont partagés entre toutes les opérations. L'import se fait depuis la page Paramètres.
@@ -145,7 +145,7 @@ export function ImportsClient({
         description="Charge un fichier .xls ou .xlsx au format du Modèle de bilan.xls client (onglet RECAP ou BILAN). Un nouveau scénario sera créé avec les postes extraits."
         extraFields={
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-ink-500">Nom du scénario à créer</span>
+            <span className="text-[11px] uppercase tracking-widest text-ink-500">Nom du scénario à créer</span>
             <input
               type="text"
               value={nomScenario}

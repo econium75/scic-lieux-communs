@@ -150,7 +150,7 @@ export function TabHypotheses({ opId, data, result, update, replace, canEdit }: 
               <NumInput value={h.tva_cession_brs} onChange={(v) => set("tva_cession_brs", n(v))} scale={100} disabled={!canEdit} suffix="%" />
             </Field>
           </div>
-          <p className="text-[10px] text-ink-500 mt-2">
+          <p className="text-[11px] text-ink-500 mt-2">
             BRS : coûts saisis HT (TVA récupérable), la cession des droits réels est soumise à la TVA de cession.
           </p>
         </div>

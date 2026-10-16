@@ -26,7 +26,7 @@ export function CommercialisationClient({
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500">
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">
             M4 — Commercialisation BRS
           </div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Qualification des ménages</h1>
@@ -66,7 +66,7 @@ export function CommercialisationClient({
         <div className="col-span-12 xl:xl:col-span-8 col-span-12 rounded-sm border border-paper-200 bg-white overflow-x-auto">
           <table className="w-full text-sm min-w-[720px]">
             <thead>
-              <tr className="text-[10px] uppercase tracking-widest text-ink-500 bg-paper-50">
+              <tr className="text-[11px] uppercase tracking-widest text-ink-500 bg-paper-50">
                 <th className="text-left px-4 py-2 font-medium">Réf.</th>
                 <th className="text-left px-4 py-2 font-medium">Typo</th>
                 <th className="text-right px-4 py-2 font-medium">UC</th>
@@ -141,7 +141,7 @@ function MenageDetail({ row }: { row: Row }) {
       <div className="rounded-sm border border-paper-200 bg-white p-5">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-ink-500">Ménage {q.reference}</div>
+            <div className="text-[11px] uppercase tracking-widest text-ink-500">Ménage {q.reference}</div>
             <div className="font-serif text-lg text-ink-900">Logement {q.typologie}</div>
           </div>
           <VerdictBadge verdict={q.verdict} />
@@ -154,7 +154,7 @@ function MenageDetail({ row }: { row: Row }) {
       </div>
 
       <div className="rounded-sm border border-paper-200 bg-white overflow-hidden">
-        <div className="px-4 py-2 bg-paper-50 text-[10px] uppercase tracking-widest text-ink-500 font-medium">
+        <div className="px-4 py-2 bg-paper-50 text-[11px] uppercase tracking-widest text-ink-500 font-medium">
           Pipeline de calcul
         </div>
         <table className="w-full text-xs">
@@ -224,7 +224,7 @@ function PreviewForm() {
 
   const field = (label: string, k: keyof typeof form, type: "number" | "text" = "number") => (
     <label className="block">
-      <span className="text-[10px] uppercase tracking-widest text-ink-500">{label}</span>
+      <span className="text-[11px] uppercase tracking-widest text-ink-500">{label}</span>
       <input
         type={type}
         value={form[k] as number | string}
@@ -242,7 +242,7 @@ function PreviewForm() {
         <div className="grid grid-cols-2 gap-3">
           {field("Référence", "reference", "text")}
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-ink-500">Typologie</span>
+            <span className="text-[11px] uppercase tracking-widest text-ink-500">Typologie</span>
             <select
               value={form.typologie_logement}
               onChange={(e) => setForm({ ...form, typologie_logement: e.target.value as Typologie })}

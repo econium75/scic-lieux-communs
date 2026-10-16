@@ -58,7 +58,7 @@ export function UserPicker({
                 </span>
                 <span className="text-ink-900">{m.nom_affichage}</span>
                 <span className="text-[11px] text-ink-500">@{m.username}</span>
-                <span className="ml-auto text-[10px] text-ink-300">{ROLES[m.role] || m.role}</span>
+                <span className="ml-auto text-[11px] text-ink-300">{ROLES[m.role] || m.role}</span>
               </button>
             </li>
           );

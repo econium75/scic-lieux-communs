@@ -10,7 +10,7 @@ export const COULEUR_TYPE: Record<TypeTache, string> = {
 
 export function BadgeType({ type }: { type: TypeTache }) {
   return (
-    <span className={cn("text-[10px] uppercase tracking-widest font-semibold px-1.5 py-0.5 rounded-sm border whitespace-nowrap", COULEUR_TYPE[type])}>
+    <span className={cn("text-[11px] uppercase tracking-widest font-semibold px-1.5 py-0.5 rounded-sm border whitespace-nowrap", COULEUR_TYPE[type])}>
       {LIBELLES_TYPE[type]}
     </span>
   );

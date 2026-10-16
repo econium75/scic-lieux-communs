@@ -150,7 +150,7 @@ def _somme(d: dict[str, float]) -> float:
 
 
 def _fr_eur(v: float) -> str:
-    return f"{v:,.0f} €".replace(",", " ")
+    return f"{v:,.0f} €".replace(",", " ")  # espace insécable : lisible à l'écran (l'espace fine est presque invisible)
 
 
 def _fr_pct(v: float) -> str:

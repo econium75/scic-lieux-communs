@@ -161,7 +161,7 @@ export function AgendaClient() {
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-7xl">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-ink-500 flex items-center gap-2"><Calendar size={11} /> Agenda partagé</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500 flex items-center gap-2"><Calendar size={11} /> Agenda partagé</div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Calendrier équipe</h1>
           <p className="text-sm text-ink-500 mt-1">COPIL, COPROJ, jalons, rendez-vous, deadlines et échéances de vos tâches.</p>
         </div>
@@ -230,7 +230,7 @@ export function AgendaClient() {
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
           <div className="xl:col-span-3 rounded-sm border border-paper-200 bg-white overflow-hidden">
             <div className="grid grid-cols-7 bg-paper-50 border-b border-paper-200">
-              {JOURS.map((j) => <div key={j} className="px-2 py-1.5 text-[10px] uppercase tracking-widest text-ink-500 text-center sm:text-left">{j}</div>)}
+              {JOURS.map((j) => <div key={j} className="px-2 py-1.5 text-[11px] uppercase tracking-widest text-ink-500 text-center sm:text-left">{j}</div>)}
             </div>
             <div className="grid grid-cols-7">
               {Array.from({ length: 42 }, (_, i) => {
@@ -267,7 +267,7 @@ export function AgendaClient() {
                     {/* Bureau : étiquettes */}
                     <div className="hidden sm:block space-y-0.5 mt-0.5">
                       {liste.slice(0, 3).map((it) => <Puce key={it.id} it={it} onClick={(e) => { e.stopPropagation(); ouvrir(it); }} />)}
-                      {liste.length > 3 && <div className="text-[10px] text-ink-500 px-1">+ {liste.length - 3} autre{liste.length - 3 > 1 ? "s" : ""}</div>}
+                      {liste.length > 3 && <div className="text-[11px] text-ink-500 px-1">+ {liste.length - 3} autre{liste.length - 3 > 1 ? "s" : ""}</div>}
                     </div>
                   </div>
                 );
@@ -287,12 +287,12 @@ export function AgendaClient() {
             return (
               <div key={cle} className="border-b md:border-b-0 md:border-r border-paper-200 min-h-[120px] md:min-h-[420px]">
                 <div className={cn("px-2 py-1.5 border-b border-paper-200 flex items-center justify-between", cle === aujourdhuiCle ? "bg-brand-50" : "bg-paper-50")}>
-                  <span className="text-xs text-ink-700"><span className="uppercase text-[10px] tracking-widest text-ink-500 mr-1">{JOURS[i]}</span>{d.getDate()}</span>
+                  <span className="text-xs text-ink-700"><span className="uppercase text-[11px] tracking-widest text-ink-500 mr-1">{JOURS[i]}</span>{d.getDate()}</span>
                   {peutEditer && <button onClick={() => nouveau(cle)} className="p-0.5 text-ink-500 hover:text-brand-500" title="Ajouter"><Plus size={12} /></button>}
                 </div>
                 <div className="p-1.5 space-y-1">
                   {liste.map((it) => <Puce key={it.id} it={it} onClick={() => ouvrir(it)} detaille />)}
-                  {liste.length === 0 && <div className="text-[10px] text-ink-300 italic px-1 hidden md:block">—</div>}
+                  {liste.length === 0 && <div className="text-[11px] text-ink-300 italic px-1 hidden md:block">—</div>}
                 </div>
               </div>
             );
@@ -304,7 +304,7 @@ export function AgendaClient() {
         <div className="space-y-5">
           {Object.keys(parJour).sort().map((cle) => (
             <div key={cle}>
-              <div className="text-[10px] uppercase tracking-widest text-ink-500 font-medium mb-1.5">
+              <div className="text-[11px] uppercase tracking-widest text-ink-500 font-medium mb-1.5">
                 {new Date(`${cle}T12:00:00`).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
               </div>
               <div className="space-y-1.5">{parJour[cle].map((it) => <Carte key={it.id} it={it} onClick={() => ouvrir(it)} />)}</div>
@@ -366,7 +366,7 @@ function Carte({ it, onClick }: { it: Item; onClick: () => void }) {
       <div className="w-14 text-sm text-ink-700 font-mono tabular-nums">{e.toute_journee ? "journée" : heure(it.date)}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={cn("text-[10px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", t.c)}>{t.l}</span>
+          <span className={cn("text-[11px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", t.c)}>{t.l}</span>
           <span className="text-sm font-medium text-ink-900">{e.titre}</span>
         </div>
         {e.lieu && <div className="text-xs text-ink-500 mt-0.5 inline-flex items-center gap-1"><MapPin size={11} /> {e.lieu}</div>}

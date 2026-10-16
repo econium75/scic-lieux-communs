@@ -9,10 +9,10 @@ import { accueil, type ElementAFaire, type MaJourneeData } from "@/lib/accueil";
 import { collab, LIBELLES_TYPE } from "@/lib/collab";
 import { aujourdHui, couleurAvatar, projet, versJour } from "@/lib/projet";
 import { getUser } from "@/lib/auth";
-import { cn } from "@/lib/format";
+import { cn, espacesLisibles } from "@/lib/format";
 import { Brand } from "@/components/brand";
 
-const eur = (v: number) => `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(v)} €`;
+const eur = (v: number) => `${espacesLisibles(new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(v))} €`;
 
 /** « aujourd'hui », « demain », « dans 3 j », « en retard de 2 j » à partir d'une date AAAA-MM-JJ. */
 function quand(iso: string | null): { t: string; urgent: boolean } {
@@ -269,7 +269,7 @@ export function MaJournee() {
           {data.activite.map((a) => {
             const contenu = (
               <>
-                <span className="w-6 h-6 rounded-full text-white text-[10px] font-semibold inline-flex items-center justify-center shrink-0" style={{ backgroundColor: couleurAvatar(a.user) }}>
+                <span className="w-6 h-6 rounded-full text-white text-[11px] font-semibold inline-flex items-center justify-center shrink-0" style={{ backgroundColor: couleurAvatar(a.user) }}>
                   {a.texte.startsWith("Vous") ? "•" : a.texte.split(" ").slice(0, 2).map((m) => m[0]).join("").toUpperCase()}
                 </span>
                 <span className="text-sm text-ink-700 flex-1 min-w-0">{a.texte}</span>
@@ -291,7 +291,7 @@ export function MaJournee() {
 function Tuile({ href, icon: I, l, v, sub, alerte, accent }: { href: string; icon: typeof ClipboardList; l: string; v: number; sub?: string; alerte?: boolean; accent?: "warn" }) {
   return (
     <Link href={href} className={cn("rounded-sm border bg-white p-4 hover:border-brand-500 transition group", alerte ? (accent === "warn" ? "border-warn-500/50" : "border-danger-500/50") : "border-paper-200")}>
-      <div className="text-[10px] uppercase tracking-widest text-ink-500 flex items-center gap-1.5"><I size={11} /> {l}</div>
+      <div className="text-[11px] uppercase tracking-widest text-ink-500 flex items-center gap-1.5"><I size={11} /> {l}</div>
       <div className={cn("font-serif text-3xl mt-1", alerte ? (accent === "warn" ? "text-warn-500" : "text-danger-500") : "text-ink-900")}>{v}</div>
       {sub && <div className={cn("text-[11px] mt-0.5", alerte ? "text-danger-500" : "text-ink-500")}>{sub}</div>}
     </Link>

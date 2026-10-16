@@ -1,43 +1,51 @@
 import type { Config } from "tailwindcss";
 
+// Couleurs pilotées par des variables CSS (globals.css) : la barre latérale sombre (.rail-sombre)
+// les redéfinit, et .theme-clair rétablit les valeurs claires pour ses fenêtres et menus déroulants.
+const v = (nom: string) => `rgb(var(--${nom}) / <alpha-value>)`;
+
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
         ink: {
-          900: "#1a1f2e",
-          700: "#3b445c",
-          500: "#6b7390",
-          300: "#a8adc1",
+          900: v("ink-900"),
+          700: v("ink-700"),
+          500: v("ink-500"),
+          300: v("ink-300"),
         },
         paper: {
-          50: "#fafaf7",
-          100: "#f3f2ec",
-          200: "#e8e6dc",
+          50: v("paper-50"),
+          100: v("paper-100"),
+          200: v("paper-200"),
         },
         brand: {
-          50: "#eef3f8",
-          500: "#2a5aa0",
-          700: "#1f3a68",
-          900: "#162a4d",
+          50: v("brand-50"),
+          500: v("brand-500"),
+          700: v("brand-700"),
+          900: v("brand-900"),
         },
+        surface: v("surface"),
         warn: {
           500: "#d97706",
-          50: "#fef3e7",
+          50: "#fef3e2",
         },
         danger: {
-          500: "#c53030",
-          50: "#fde8e8",
+          500: "#d0342c",
+          50: "#fdecea",
         },
         ok: {
-          500: "#2e7d32",
-          50: "#eaf5eb",
+          500: "#16803c",
+          50: "#e8f6ed",
         },
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui"],
-        serif: ["var(--font-serif)", "Georgia", "serif"],
+        serif: ["var(--font-serif)", "ui-sans-serif", "system-ui"],
+      },
+      borderRadius: {
+        sm: "6px",
       },
     },
   },

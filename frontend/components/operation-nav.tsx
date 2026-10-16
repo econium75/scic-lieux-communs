@@ -34,12 +34,12 @@ export function OperationNav({ opId, compact = false }: { opId: number; compact?
       <span className="truncate">{label}</span>
     </Link>
   );
-  const titre = (t: string) => <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium mt-3 mb-1">{t}</div>;
+  const titre = (t: string) => <div className="text-[11px] tracking-widest text-ink-500 uppercase font-medium mt-3 mb-1">{t}</div>;
   const ico = "text-ink-500 shrink-0";
 
   return (
     <nav className="flex flex-col gap-0.5">
-      <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium mb-1">Opération</div>
+      <div className="text-[11px] tracking-widest text-ink-500 uppercase font-medium mb-1">Opération</div>
       {lien(`/operations/${opId}`, "Tableau de bord", pathname === `/operations/${opId}`, <LayoutDashboard size={15} className={ico} />)}
 
       {titre("Montage financier")}
@@ -50,7 +50,7 @@ export function OperationNav({ opId, compact = false }: { opId: number; compact?
           ongletActif === o.key,
           <span
             className={cn(
-              "text-[10px] w-[15px] h-[15px] rounded-full inline-flex items-center justify-center shrink-0",
+              "text-[11px] w-[15px] h-[15px] rounded-full inline-flex items-center justify-center shrink-0",
               ongletActif === o.key ? "bg-brand-500 text-white" : "bg-paper-200 text-ink-700"
             )}
           >

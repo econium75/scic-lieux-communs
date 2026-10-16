@@ -11,6 +11,7 @@ import {
   Legend,
   ReferenceLine,
 } from "recharts";
+import { espacesLisibles } from "@/lib/format";
 
 export function SensibiliteChart({
   rows,
@@ -33,39 +34,39 @@ export function SensibiliteChart({
     <div style={{ width: "100%", height: 320 }}>
       <ResponsiveContainer>
         <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 30 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e8e6dc" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#dae0e8" />
           <XAxis
             dataKey="value"
-            tick={{ fontSize: 11, fill: "#6b7390" }}
-            label={{ value: paramLabel, position: "bottom", fontSize: 11, fill: "#6b7390" }}
+            tick={{ fontSize: 11, fill: "#667085" }}
+            label={{ value: paramLabel, position: "bottom", fontSize: 11, fill: "#667085" }}
           />
           <YAxis
             yAxisId="left"
-            tick={{ fontSize: 10, fill: "#6b7390" }}
+            tick={{ fontSize: 10, fill: "#667085" }}
             tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-            label={{ value: "Marge nette (€)", angle: -90, position: "insideLeft", fontSize: 11, fill: "#2a5aa0" }}
+            label={{ value: "Marge nette (€)", angle: -90, position: "insideLeft", fontSize: 11, fill: "#4b52d6" }}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
-            tick={{ fontSize: 10, fill: "#6b7390" }}
+            tick={{ fontSize: 10, fill: "#667085" }}
             label={{ value: "Loyer éq. €/m²/mois", angle: 90, position: "insideRight", fontSize: 11, fill: "#d97706" }}
           />
-          <ReferenceLine yAxisId="left" y={0} stroke="#a8adc1" strokeDasharray="2 2" />
-          <ReferenceLine yAxisId="right" y={11.8} stroke="#c53030" strokeDasharray="2 2" label={{ value: "Plafond PLS", fontSize: 9, fill: "#c53030", position: "insideTopRight" }} />
+          <ReferenceLine yAxisId="left" y={0} stroke="#a7b0c0" strokeDasharray="2 2" />
+          <ReferenceLine yAxisId="right" y={11.8} stroke="#d0342c" strokeDasharray="2 2" label={{ value: "Plafond PLS", fontSize: 9, fill: "#d0342c", position: "insideTopRight" }} />
           <Tooltip
             formatter={(v: number, name: string) => {
               if (name === "Loyer d'équilibre") return `${v.toFixed(2).replace(".", ",")} €/m²/mois`;
-              return new Intl.NumberFormat("fr-FR", {
+              return espacesLisibles(new Intl.NumberFormat("fr-FR", {
                 style: "currency",
                 currency: "EUR",
                 maximumFractionDigits: 0,
-              }).format(v);
+              }).format(v));
             }}
             contentStyle={{ fontSize: 11 }}
           />
           <Legend wrapperStyle={{ fontSize: 11, paddingTop: 20 }} />
-          <Bar yAxisId="left" dataKey="marge_nette" name="Marge nette" fill="#2a5aa0" opacity={0.75} />
+          <Bar yAxisId="left" dataKey="marge_nette" name="Marge nette" fill="#4b52d6" opacity={0.75} />
           <Line yAxisId="right" type="monotone" dataKey="loyer_eq" name="Loyer d'équilibre" stroke="#d97706" strokeWidth={2} dot={{ r: 3 }} />
         </ComposedChart>
       </ResponsiveContainer>

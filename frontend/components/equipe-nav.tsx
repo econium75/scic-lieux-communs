@@ -36,7 +36,7 @@ export function EquipeNav({ dense = false }: { dense?: boolean }) {
 
   return (
     <nav className="flex flex-col gap-0.5">
-      <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium mb-1">Équipe</div>
+      <div className="text-[11px] tracking-widest text-ink-500 uppercase font-medium mb-1">Équipe</div>
       {liens.map((l) => {
         const actif = pathname === l.href || pathname.startsWith(`${l.href}/`);
         return (
@@ -53,7 +53,7 @@ export function EquipeNav({ dense = false }: { dense?: boolean }) {
             <span className="flex-1">{l.label}</span>
             {l.badge > 0 && (
               <span
-                className={cn("text-[10px] min-w-[18px] h-[18px] px-1 rounded-full inline-flex items-center justify-center font-semibold", l.alerte ? "bg-danger-500 text-white" : "bg-brand-500 text-white")}
+                className={cn("text-[11px] min-w-[18px] h-[18px] px-1 rounded-full inline-flex items-center justify-center font-semibold", l.alerte ? "bg-danger-500 text-white" : "bg-brand-500 text-white")}
                 title={l.href === "/documents" ? "Documents à signer" : l.alerte ? "Dont certaines en retard" : "Tâches à traiter"}
               >
                 {l.badge}

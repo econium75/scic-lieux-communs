@@ -9,7 +9,7 @@ export function SidebarOperation({ operations }: { operations: Operation[] }) {
   return (
     <>
       <div>
-        <div className="text-[10px] tracking-widest text-ink-500 uppercase font-medium mb-2">Opération active</div>
+        <div className="text-[11px] tracking-widest text-ink-500 uppercase font-medium mb-2">Opération active</div>
         <OperationsSwitcher activeOperationId={opId} initialOperations={operations} />
       </div>
       {opId && <OperationNav opId={opId} compact />}
