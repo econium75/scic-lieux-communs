@@ -59,15 +59,15 @@ export function OperationNav({ opId, compact = false }: { opId: number; compact?
         )
       )}
 
+      {titre("Outils du montage")}
+      {lien(`/operations/${opId}/commercialisation`, "Commercialisation BRS", pathname.endsWith("/commercialisation"), <Users size={15} className={ico} />)}
+      {lien(`/operations/${opId}/scenarios`, "Scénarios", pathname.includes("/scenarios"), <GitBranch size={15} className={ico} />)}
+      {lien(`/operations/${opId}/imports`, "Imports", pathname.endsWith("/imports"), <Upload size={15} className={ico} />)}
+
       {titre("Suivi des opérations")}
       {lien(`/operations/${opId}/projet?vue=gantt`, "Diagramme de Gantt", vueProjet === "gantt", <GanttChartSquare size={15} className={ico} />)}
       {lien(`/operations/${opId}/projet?vue=tableau`, "Tableau des tâches", vueProjet === "tableau", <KanbanSquare size={15} className={ico} />)}
       {lien(`/operations/${opId}/projet?vue=phases`, "Suivi des phases", vueProjet === "phases", <Milestone size={15} className={ico} />)}
-
-      {titre("Modules")}
-      {lien(`/operations/${opId}/commercialisation`, "Commercialisation BRS", pathname.endsWith("/commercialisation"), <Users size={15} className={ico} />)}
-      {lien(`/operations/${opId}/scenarios`, "Scénarios", pathname.includes("/scenarios"), <GitBranch size={15} className={ico} />)}
-      {lien(`/operations/${opId}/imports`, "Imports", pathname.endsWith("/imports"), <Upload size={15} className={ico} />)}
     </nav>
   );
 }
