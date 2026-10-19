@@ -117,7 +117,7 @@ export function PhasesTimeline({ operationId }: { operationId: number }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[11px] uppercase tracking-widest text-ink-500">Suivi de projet</div>
+        <div className="text-[11px] uppercase tracking-widest text-ink-500">Suivi de l'opération</div>
         <div className="text-[11px] text-ink-500">
           {phases.filter((p) => p.statut === "termine").length} / {phases.length} phases terminées
         </div>

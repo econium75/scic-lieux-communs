@@ -59,7 +59,7 @@ export function OperationNav({ opId, compact = false }: { opId: number; compact?
         )
       )}
 
-      {titre("Gestion de projet")}
+      {titre("Suivi des opérations")}
       {lien(`/operations/${opId}/projet?vue=gantt`, "Diagramme de Gantt", vueProjet === "gantt", <GanttChartSquare size={15} className={ico} />)}
       {lien(`/operations/${opId}/projet?vue=tableau`, "Tableau des tâches", vueProjet === "tableau", <KanbanSquare size={15} className={ico} />)}
       {lien(`/operations/${opId}/projet?vue=phases`, "Suivi des phases", vueProjet === "phases", <Milestone size={15} className={ico} />)}

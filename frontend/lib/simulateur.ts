@@ -184,6 +184,7 @@ export type LigneExploitation = {
   annee_civile: number;
   coef_indexation: number;
   loyers: number;
+  redevances_brs: number;
   parkings: number;
   vacance: number;
   impayes: number;
@@ -299,50 +300,63 @@ export type SimResult = {
     controle: ParProduitTotal;
     structure: Structure;
   };
-  exploitation: {
-    lignes: LigneExploitation[];
-    brs: LigneBRS[];
-    kpis: {
-      autofinancement_net_a1: number;
-      autof_sur_loyers_a1: number;
-      annuites_sur_loyers_a1: number;
-      dscr_a1: number | null;
-      cumul_40: number;
-      cumul_fin: number;
-      annee_equilibre: number | null;
-      annee_retour_fonds_propres: number | null;
-      fonds_propres_investis: number;
-      tri_fp_40: number | null;
-      tri_fp_fin: number | null;
-      van_40: number;
-      nb_annees: number;
-    };
-  };
-  synthese: {
-    titre: string;
-    zones: { zone_123: string; zone_abc: string };
-    annee_livraison: number;
-    nb_logements: number;
-    shab: number;
-    su: number;
-    prix_revient_ttc: number;
-    prix_revient_logt: number;
-    prix_revient_m2: number;
-    autofinancement_net_a1: number;
-    dscr_a1: number | null;
-    annee_equilibre: number | null;
-    fonds_propres_total: number;
-    subventions_total: number;
-    emprunts_total: number;
-    cession_affectee: number;
-    annuites_a1: number;
-    repartition: { produit: Produit; nb: number; shab: number; su: number; prix_revient_ttc: number; loyer_m2: number; loyer_annuel: number }[];
-    structure: { poste: string; montant: number; part: number }[];
-    brs: { produit_cession_ht: number; marge_cession: number; solde_ofs_a1: number | null };
-  };
+  exploitation: Exploitation;
+  exploitation_avec_brs: Exploitation;
+  synthese: Synthese;
+  synthese_sans_brs: Synthese;
   alertes: Alerte[];
   bareme: Bareme;
   limites: { lignes_supplementaires: number; financements_complementaires: number };
+};
+
+/** Périmètre des onglets 7 et 8 : avec les BRS (locatif + compte OFS) ou sans (locatif seul). */
+export type PerimetreBRS = "avec" | "sans";
+
+export type Exploitation = {
+  perimetre: "avec_brs" | "sans_brs";
+  lignes: LigneExploitation[];
+  brs: LigneBRS[];
+  kpis: {
+    autofinancement_net_a1: number;
+    autof_sur_loyers_a1: number;
+    annuites_sur_loyers_a1: number;
+    dscr_a1: number | null;
+    cumul_40: number;
+    cumul_fin: number;
+    annee_equilibre: number | null;
+    annee_retour_fonds_propres: number | null;
+    fonds_propres_investis: number;
+    tri_fp_40: number | null;
+    tri_fp_fin: number | null;
+    van_40: number;
+    nb_annees: number;
+    nb_logements: number;
+  };
+};
+
+export type Synthese = {
+  perimetre: "avec_brs" | "sans_brs";
+  a_des_brs: boolean;
+  titre: string;
+  zones: { zone_123: string; zone_abc: string };
+  annee_livraison: number;
+  nb_logements: number;
+  shab: number;
+  su: number;
+  prix_revient_ttc: number;
+  prix_revient_logt: number;
+  prix_revient_m2: number;
+  autofinancement_net_a1: number;
+  dscr_a1: number | null;
+  annee_equilibre: number | null;
+  fonds_propres_total: number;
+  subventions_total: number;
+  emprunts_total: number;
+  cession_affectee: number;
+  annuites_a1: number;
+  repartition: { produit: Produit; nb: number; shab: number; su: number; prix_revient_ttc: number; loyer_m2: number; loyer_annuel: number }[];
+  structure: { poste: string; montant: number; part: number }[];
+  brs: { produit_cession_ht: number; marge_cession: number; solde_ofs_a1: number | null };
 };
 
 export type SimulationPayload = {
@@ -358,6 +372,16 @@ export function nouvelId(prefixe: string): string {
   return `${prefixe}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-export function exportUrl(opId: number, onglet: string): string {
-  return `/api/simulations/operation/${opId}/export/${onglet}`;
+export function exportUrl(opId: number, onglet: string, brs?: PerimetreBRS): string {
+  const q = brs && (onglet === "exploitation" || onglet === "synthese") ? `?brs=${brs}` : "";
+  return `/api/simulations/operation/${opId}/export/${onglet}${q}`;
+}
+
+/** Résultats des onglets 7 et 8 pour le périmètre choisi (sans BRS si l'opération n'en a pas : identique). */
+export function selonPerimetre(result: SimResult, brs: PerimetreBRS): { exploitation: Exploitation; synthese: Synthese } {
+  const avec = brs === "avec" && result.synthese.a_des_brs;
+  return {
+    exploitation: avec ? result.exploitation_avec_brs : result.exploitation,
+    synthese: avec ? result.synthese : result.synthese_sans_brs,
+  };
 }

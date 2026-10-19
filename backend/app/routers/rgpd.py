@@ -5,7 +5,7 @@ router = APIRouter()
 
 
 REGISTRE = {
-    "responsable": "SCIC LIEUX COMMUNS",
+    "responsable": "SCIC FAIRE COMMUN",
     "sous_traitant": "Incepta Group Pte. Ltd. (hébergement + maintenance)",
     "dpo_contact": "À désigner avant mise en production",
     "finalite_principale": (
@@ -26,7 +26,7 @@ REGISTRE = {
             "base_legale": "Consentement explicite du ménage (dossier candidature BRS)",
             "duree_conservation": "7 ans après fin de la commercialisation (obligation comptable)",
             "destinataires": [
-                "Équipe commerciale SCIC Lieux Communs",
+                "Équipe commerciale SCIC Faire Commun",
                 "Expert-comptable (sur demande)",
                 "ANRU (sur demande, pour justification des subventions attribuées)",
             ],

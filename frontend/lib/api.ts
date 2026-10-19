@@ -54,7 +54,7 @@ export const api = {
   deleteOperation: (id: number) =>
     fetchJson<{ ok: boolean }>(`/api/operations/${id}`, { method: "DELETE" }),
 
-  // Gestion de projet (lecture côté serveur pour le tableau de bord)
+  // Suivi des opérations (lecture côté serveur pour le tableau de bord)
   getPlanning: (opId: number) => fetchJson<Planning>(`/api/projet/operation/${opId}`),
 
   // Simulateur 8 onglets

@@ -1,4 +1,4 @@
-"""SCIC Lieux Communs — Moteur de simulation financière.
+"""Téo (SCIC Faire Commun) — Moteur de simulation financière.
 
 Modules :
 - M1 referentiels (plafonds BRS, FiLoSoFi, taux, communes)

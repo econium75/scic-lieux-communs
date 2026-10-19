@@ -10,7 +10,9 @@ import { ONGLETS, exportUrl } from "@/lib/simulateur";
 export default async function TableauDeBordPage({ params }: { params: { id: string } }) {
   const opId = Number(params.id);
   const sim = await api.getSimulation(opId);
-  const s = sim.result.synthese;
+  const s = sim.result.synthese; // vue complète (avec BRS)
+  const sansBrs = sim.result.synthese_sans_brs;
+  const exploitation = s.a_des_brs ? sim.result.exploitation_avec_brs : sim.result.exploitation;
   const alertes = sim.result.alertes;
   const produits = s.repartition.filter((r) => r.nb > 0);
   const planning = await api.getPlanning(opId).catch(() => null);
@@ -53,13 +55,17 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
         <KpiCard
           label="Autofinancement net an 1"
           value={formatEuro(s.autofinancement_net_a1, { compact: true })}
-          sub={s.dscr_a1 !== null ? `DSCR ${s.dscr_a1.toFixed(2).replace(".", ",")}` : "aucun locatif"}
+          sub={
+            s.a_des_brs
+              ? `avec BRS · sans BRS : ${formatEuro(sansBrs.autofinancement_net_a1, { compact: true })}`
+              : s.dscr_a1 !== null ? `DSCR ${s.dscr_a1.toFixed(2).replace(".", ",")}` : "aucun locatif"
+          }
           tone={s.autofinancement_net_a1 < 0 ? "danger" : "ok"}
         />
         <KpiCard
           label="Retour à l'équilibre"
           value={s.annee_equilibre ? `année ${s.annee_equilibre}` : "—"}
-          sub="cumul d'autofinancement > 0"
+          sub={s.a_des_brs ? `avec BRS · sans BRS : ${sansBrs.annee_equilibre ? `année ${sansBrs.annee_equilibre}` : "non atteint"}` : "cumul d'autofinancement > 0"}
           tone={s.annee_equilibre ? "default" : "warn"}
         />
       </div>
@@ -103,7 +109,7 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
       {planning && (
         <div className="rounded-sm border border-paper-200 bg-white p-5 mb-6">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <div className="text-[11px] uppercase tracking-widest text-ink-500">Gestion de projet</div>
+            <div className="text-[11px] uppercase tracking-widest text-ink-500">Suivi de l'opération</div>
             <div className="flex items-center gap-3 text-[11px]">
               <Link href={`/operations/${opId}/projet?vue=gantt`} className="text-brand-500 hover:underline">Diagramme de Gantt →</Link>
               <Link href={`/operations/${opId}/projet?vue=phases`} className="text-brand-500 hover:underline">Suivi des phases →</Link>
@@ -112,7 +118,7 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
           {planning.phases.length === 0 ? (
             <p className="text-sm text-ink-500">
               Aucune phase définie.{" "}
-              <Link href={`/operations/${opId}/projet?vue=phases`} className="text-brand-500 hover:underline">Initialiser le suivi de projet</Link>
+              <Link href={`/operations/${opId}/projet?vue=phases`} className="text-brand-500 hover:underline">Initialiser le suivi de l'opération</Link>
             </p>
           ) : (
             <>
@@ -148,17 +154,17 @@ export default async function TableauDeBordPage({ params }: { params: { id: stri
         <AttachmentsPanel parentType="operation" parentId={opId} title="Documents de l'opération" />
       </div>
 
-      {sim.result.programme.total.nb_locatif > 0 && (
+      {(sim.result.programme.total.nb_locatif > 0 || s.a_des_brs) && (
         <div className="rounded-sm border border-paper-200 bg-white p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="text-[11px] uppercase tracking-widest text-ink-500">
-              Exploitation locative — projection {sim.result.exploitation.kpis.nb_annees} ans
+              {s.a_des_brs ? "Exploitation avec BRS (locatif + compte OFS)" : "Exploitation locative"} — projection {exploitation.kpis.nb_annees} ans
             </div>
             <Link href={`/operations/${opId}/simulateur?onglet=exploitation`} className="text-[11px] text-brand-500 hover:underline">
               Bilan d'exploitation détaillé →
             </Link>
           </div>
-          <AutofinancementChart lignes={sim.result.exploitation.lignes} />
+          <AutofinancementChart lignes={exploitation.lignes} />
         </div>
       )}
     </div>

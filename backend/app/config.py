@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    app_name: str = "Téo — SCIC Lieux Communs"
+    app_name: str = "Téo — SCIC Faire Commun"
     version: str = "0.1.0"
     database_url: str = "sqlite:///./scic.db"
     data_dir: Path = Path(__file__).parent / "data"

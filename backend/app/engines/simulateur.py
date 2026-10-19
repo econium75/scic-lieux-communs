@@ -648,10 +648,16 @@ def tableau_amortissement(pret: dict) -> list[dict]:
 
 
 # ─────────────────────────────────────────────────────────── 7. bilan d'exploitation
-def calcul_exploitation(data: dict, prog: dict, fin: dict) -> dict:
+def calcul_exploitation(data: dict, prog: dict, fin: dict, avec_brs: bool = False) -> dict:
+    """Compte d'exploitation prévisionnel.
+
+    Sans BRS : partie locative seule (PLAI, PLUS, PLS, PLI), le compte OFS des BRS est présenté à part.
+    Avec BRS : consolidation de la partie locative et du compte OFS (redevances, prêt foncier, fonds propres BRS).
+    """
     h = data["hypotheses"]
     n_annees = max(1, min(60, int(_num(h.get("duree_projection"), 50))))
     pp = prog["par_produit"]
+    perimetre = LOCATIFS + (["BRS"] if avec_brs else [])
     nb_loc = sum(pp[p]["nb"] for p in LOCATIFS)
     nb_exo = sum(pp[p]["nb"] for p in EXONERES_TFPB)
     nb_pli = pp["PLI"]["nb"]
@@ -661,8 +667,9 @@ def calcul_exploitation(data: dict, prog: dict, fin: dict) -> dict:
     idx = _num(h.get("indexation_loyers"))
     infl = _num(h.get("inflation_charges"))
     exo = int(_num(h.get("exoneration_tfpb_ans")))
-    annuites = _echeancier(fin["prets"], LOCATIFS, n_annees)
-    fonds_propres_initiaux = sum(fin["fonds_propres"][p] for p in LOCATIFS)
+    annuites = _echeancier(fin["prets"], perimetre, n_annees)
+    fonds_propres_initiaux = sum(fin["fonds_propres"][p] for p in perimetre)
+    redevance_brs_base = _num(h["loyer_plafond"].get("BRS")) * pp["BRS"]["su"] * 12 if avec_brs else 0.0
 
     lignes = []
     cumul = 0.0
@@ -678,8 +685,10 @@ def calcul_exploitation(data: dict, prog: dict, fin: dict) -> dict:
         vacance = -(loyers + parkings) * _num(h.get("vacance"))
         impayes = -(loyers + parkings) * _num(h.get("impayes"))
         rls = -nb_loc * _num(h.get("rls_part_logements")) * _num(h.get("rls_logt_mois")) * 12 * coef
-        produits = loyers + parkings + vacance + impayes + rls
-        gestion = -(loyers + parkings + vacance + impayes) * _num(h.get("frais_gestion_pct"))
+        redevances = redevance_brs_base * coef
+        impayes += -redevances * _num(h.get("impayes"))
+        produits = loyers + parkings + vacance + impayes + rls + redevances
+        gestion = -(loyers + parkings + vacance + impayes + redevances) * _num(h.get("frais_gestion_pct"))
         entretien = -_num(h.get("entretien_logt")) * nb_loc * coef_ch
         pge = -_num(h.get("pge_logt")) * nb_loc * coef_ch
         assurance = -_num(h.get("assurance_logt")) * nb_loc * coef_ch
@@ -698,11 +707,11 @@ def calcul_exploitation(data: dict, prog: dict, fin: dict) -> dict:
             annee_retour_fp = n
         lignes.append({
             "annee": n, "annee_civile": livraison + n - 1, "coef_indexation": coef,
-            "loyers": loyers, "parkings": parkings, "vacance": vacance, "impayes": impayes, "rls": rls,
+            "loyers": loyers, "redevances_brs": redevances, "parkings": parkings, "vacance": vacance, "impayes": impayes, "rls": rls,
             "produits_nets": produits, "frais_gestion": gestion, "entretien": entretien, "pge": pge,
             "assurance": assurance, "tfpb": tfpb, "charges": charges, "autofinancement_brut": ebe,
             "annuites": ann, "autofinancement_net": autof, "cumul": cumul,
-            "autof_sur_loyers": _ratio(autof, loyers), "annuites_sur_loyers": _ratio(-ann, loyers),
+            "autof_sur_loyers": _ratio(autof, loyers + redevances), "annuites_sur_loyers": _ratio(-ann, loyers + redevances),
             "dscr": _ratio(ebe, -ann) if ann else None, "flux_cumule_fp": flux_cumul,
         })
 
@@ -732,6 +741,7 @@ def calcul_exploitation(data: dict, prog: dict, fin: dict) -> dict:
         "tri_fp_fin": tri(n_annees),
         "van_40": van40,
         "nb_annees": n_annees,
+        "nb_logements": sum(pp[p]["nb"] for p in perimetre),
     }
 
     # Compte OFS — BRS : redevances foncières vs portage du foncier
@@ -750,7 +760,7 @@ def calcul_exploitation(data: dict, prog: dict, fin: dict) -> dict:
             cumul_brs += solde
             brs.append({"annee": n, "annee_civile": livraison + n - 1, "redevances": red, "impayes": imp,
                         "frais_gestion": gest, "annuites": ann, "solde": solde, "cumul": cumul_brs})
-    return {"lignes": lignes, "kpis": kpis, "brs": brs}
+    return {"perimetre": "avec_brs" if avec_brs else "sans_brs", "lignes": lignes, "kpis": kpis, "brs": brs}
 
 
 # ─────────────────────────────────────────────────────────── 5. réservations
@@ -878,43 +888,58 @@ def _alertes(data: dict, prog: dict, pr: dict, fin: dict, exp: dict, resa: dict,
 
 
 # ─────────────────────────────────────────────────────────── 8. synthèse
-def _synthese(data: dict, prog: dict, pr: dict, fin: dict, exp: dict) -> dict:
+def _synthese(data: dict, prog: dict, pr: dict, fin: dict, exp: dict, avec_brs: bool = True) -> dict:
+    """Synthèse de l'opération, avec ou sans les logements BRS (exp : bilan d'exploitation du même périmètre)."""
     h = data["hypotheses"]
     pp = prog["par_produit"]
     k = exp["kpis"]
+    produits = PRODUITS if avec_brs else LOCATIFS
+
+    def somme(d: dict) -> float:
+        return sum(_num(d.get(p)) for p in produits)
+
+    nb = sum(pp[p]["nb"] for p in produits)
+    shab = sum(pp[p]["shab"] for p in produits)
+    ttc = somme(pr["ttc"])
+    montants = {"subventions": somme(fin["subventions"]), "fonds_propres": somme(fin["fonds_propres"]),
+                "emprunts": somme(fin["emprunts"]), "cession": somme(fin["cession_affectee"])}
+    structure = [
+        {"poste": "Subventions", "montant": montants["subventions"], "part": _ratio(montants["subventions"], ttc)},
+        {"poste": "Fonds propres", "montant": montants["fonds_propres"], "part": _ratio(montants["fonds_propres"], ttc)},
+        {"poste": "Emprunts", "montant": montants["emprunts"], "part": _ratio(montants["emprunts"], ttc)},
+    ]
+    if avec_brs:
+        structure.append({"poste": "Cession BRS affectée", "montant": montants["cession"], "part": _ratio(montants["cession"], ttc)})
     return {
+        "perimetre": "avec_brs" if avec_brs else "sans_brs",
+        "a_des_brs": pp["BRS"]["nb"] > 0,
         "titre": f"{h.get('nom_operation') or 'Opération'} — {h.get('commune') or ''}".strip(" —"),
         "zones": {"zone_123": h.get("zone_123"), "zone_abc": h.get("zone_abc")},
         "annee_livraison": h.get("annee_livraison"),
-        "nb_logements": prog["total"]["nb"],
-        "shab": prog["total"]["shab"],
-        "su": prog["total"]["su"],
-        "prix_revient_ttc": pr["ttc"]["total"],
-        "prix_revient_logt": pr["par_logement"]["total"],
-        "prix_revient_m2": pr["par_m2_shab"]["total"],
+        "nb_logements": nb,
+        "shab": shab,
+        "su": sum(pp[p]["su"] for p in produits),
+        "prix_revient_ttc": ttc,
+        "prix_revient_logt": _ratio(ttc, nb),
+        "prix_revient_m2": _ratio(ttc, shab),
         "autofinancement_net_a1": k["autofinancement_net_a1"],
         "dscr_a1": k["dscr_a1"],
         "annee_equilibre": k["annee_equilibre"],
-        "fonds_propres_total": fin["fonds_propres"]["total"],
-        "subventions_total": fin["subventions"]["total"],
-        "emprunts_total": fin["emprunts"]["total"],
-        "cession_affectee": fin["cession_affectee"]["total"],
-        "annuites_a1": fin["annuites_annee1"]["total"],
+        "fonds_propres_total": montants["fonds_propres"],
+        "subventions_total": montants["subventions"],
+        "emprunts_total": montants["emprunts"],
+        "cession_affectee": montants["cession"],
+        "annuites_a1": somme(fin["annuites_annee1"]),
         "repartition": [
             {"produit": p, "nb": pp[p]["nb"], "shab": pp[p]["shab"], "su": pp[p]["su"],
              "prix_revient_ttc": pr["ttc"][p], "loyer_m2": pp[p]["loyer_m2"], "loyer_annuel": pp[p]["loyer_annuel"]}
-            for p in PRODUITS
+            for p in produits
         ],
-        "structure": [
-            {"poste": "Subventions", "montant": fin["subventions"]["total"], "part": fin["structure"]["subventions"]["total"]},
-            {"poste": "Fonds propres", "montant": fin["fonds_propres"]["total"], "part": fin["structure"]["fonds_propres"]["total"]},
-            {"poste": "Emprunts", "montant": fin["emprunts"]["total"], "part": fin["structure"]["emprunts"]["total"]},
-            {"poste": "Cession BRS affectée", "montant": fin["cession_affectee"]["total"], "part": fin["structure"]["cession"]["total"]},
-        ],
+        "structure": structure,
         "brs": {
-            "produit_cession_ht": fin["cession_brs"]["produit_ht"],
-            "marge_cession": fin["cession_brs"]["marge"],
-            "solde_ofs_a1": exp["brs"][0]["solde"] if exp["brs"] else None,
+            "produit_cession_ht": fin["cession_brs"]["produit_ht"] if avec_brs else 0.0,
+            "marge_cession": fin["cession_brs"]["marge"] if avec_brs else 0.0,
+            "solde_ofs_a1": exp["brs"][0]["solde"] if (avec_brs and exp["brs"]) else None,
         },
     }
 
@@ -926,10 +951,12 @@ def calculer(data: dict | None, bareme: dict | None = None, aujourd_hui: date | 
     prog = calcul_programme(data)
     pr = calcul_prix_revient(data, prog)
     fin = calcul_financement(data, prog, pr, bareme)
-    exp = calcul_exploitation(data, prog, fin)
+    exp = calcul_exploitation(data, prog, fin)  # sans BRS : partie locative (compte OFS à part)
+    exp_brs = calcul_exploitation(data, prog, fin, avec_brs=True)  # avec BRS : locatif + compte OFS consolidés
     resa = calcul_reservations(data, prog, bareme, aujourd_hui)
     alertes = _alertes(data, prog, pr, fin, exp, resa, bareme)
-    synthese = _synthese(data, prog, pr, fin, exp)
+    synthese = _synthese(data, prog, pr, fin, exp_brs, avec_brs=True)
+    synthese_sans_brs = _synthese(data, prog, pr, fin, exp, avec_brs=False)
     bilan = {
         "emplois": pr["par_rubrique"],
         "ht": pr["ht"], "tva": pr["tva"], "ttc": pr["ttc"],
@@ -949,7 +976,9 @@ def calculer(data: dict | None, bareme: dict | None = None, aujourd_hui: date | 
         "reservations": resa,
         "bilan_operation": bilan,
         "exploitation": exp,
+        "exploitation_avec_brs": exp_brs,
         "synthese": synthese,
+        "synthese_sans_brs": synthese_sans_brs,
         "alertes": alertes,
         "bareme": bareme,
         "limites": {"lignes_supplementaires": MAX_LIGNES_SUPPLEMENTAIRES,

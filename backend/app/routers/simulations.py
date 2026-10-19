@@ -139,16 +139,17 @@ def prefill_prix_revient(op_id: int, body: SimulationBody, session: Session = De
 
 
 @router.get("/operation/{op_id}/export/{onglet}")
-def exporter(op_id: int, onglet: str, session: Session = Depends(get_session)):
+def exporter(op_id: int, onglet: str, brs: str = "avec", session: Session = Depends(get_session)):
     if onglet != "complet" and onglet not in ONGLETS:
         raise HTTPException(404, f"Onglet inconnu : {onglet}")
     op = _operation(session, op_id)
     sim = get_or_create_simulation(session, op)
     data = normaliser(sim.data)
     res = calculer(data, get_bareme(session))
-    buf = build_simulateur_xlsx(data, res, onglet)
+    buf = build_simulateur_xlsx(data, res, onglet, brs)
     slug = re.sub(r"[^A-Za-z0-9_-]+", "_", op.code or f"op{op.id}")
-    nom = f"simulateur_{slug}_{onglet}.xlsx"
+    suffixe = f"_{'sans' if brs == 'sans' else 'avec'}_brs" if onglet in ("exploitation", "synthese") and res["synthese"]["a_des_brs"] else ""
+    nom = f"simulateur_{slug}_{onglet}{suffixe}.xlsx"
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

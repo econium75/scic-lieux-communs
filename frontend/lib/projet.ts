@@ -1,4 +1,4 @@
-// Gestion de projet : planning (Gantt), phases de suivi.
+// Suivi des opérations : planning (Gantt), phases de suivi.
 import { req } from "./collab";
 
 export type StatutProjet = "a_faire" | "en_cours" | "termine" | "bloque";

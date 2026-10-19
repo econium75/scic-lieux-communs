@@ -1,4 +1,4 @@
-// SCIC Lieux Communs — Service Worker AUTO-DESTRUCTEUR
+// Téo (SCIC Faire Commun) — Service Worker AUTO-DESTRUCTEUR
 // Cette version se désinstalle elle-même et supprime tous les caches.
 // Objectif : éliminer définitivement les anciens SW qui corrompaient les requêtes /api/ (POST).
 // On ne fait AUCune interception de fetch : le réseau fonctionne normalement.

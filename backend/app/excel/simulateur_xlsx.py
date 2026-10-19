@@ -301,7 +301,8 @@ def feuille_bilan_operation(ws, data: dict, res: dict) -> None:
 # ─────────────────────────────────────────────────────── 7. bilan d'exploitation
 EXP_COLS = [
     ("annee", "Année n", "0"), ("annee_civile", "Année civile", "0"), ("coef_indexation", "Coef. index.", "0.0000"),
-    ("loyers", "Loyers logements", MONEY_FMT), ("parkings", "Parkings", MONEY_FMT), ("vacance", "Vacance", MONEY_FMT),
+    ("loyers", "Loyers logements", MONEY_FMT), ("redevances_brs", "Redevances BRS (OFS)", MONEY_FMT),
+    ("parkings", "Parkings", MONEY_FMT), ("vacance", "Vacance", MONEY_FMT),
     ("impayes", "Impayés", MONEY_FMT), ("rls", "RLS", MONEY_FMT), ("produits_nets", "Produits nets", MONEY_FMT),
     ("frais_gestion", "Frais de gestion", MONEY_FMT), ("entretien", "Entretien courant", MONEY_FMT),
     ("pge", "Provision gros entretien", MONEY_FMT), ("assurance", "Assurance", MONEY_FMT), ("tfpb", "TFPB", MONEY_FMT),
@@ -312,10 +313,12 @@ EXP_COLS = [
 ]
 
 
-def feuille_exploitation(ws, data: dict, res: dict) -> None:
-    e = res["exploitation"]
+def feuille_exploitation(ws, data: dict, res: dict, avec_brs: bool = False) -> None:
+    e = res["exploitation_avec_brs" if avec_brs else "exploitation"]
     k = e["kpis"]
-    r = _titre(ws, "Bilan d'exploitation prévisionnel — locatif (PLAI, PLUS, PLS, PLI)",
+    titre = ("Bilan d'exploitation prévisionnel — avec BRS (locatif + compte OFS consolidés)" if avec_brs
+             else "Bilan d'exploitation prévisionnel — sans BRS (locatif : PLAI, PLUS, PLS, PLI)")
+    r = _titre(ws, titre,
                "Montants en € courants ; charges en négatif. Alimenté par les hypothèses, les loyers, le prix de revient et le plan de financement.")
     kp = [
         ("Autofinancement net année 1", k["autofinancement_net_a1"], MONEY_FMT_NEG_RED),
@@ -332,14 +335,15 @@ def feuille_exploitation(ws, data: dict, res: dict) -> None:
     for lib, v, fmt in kp:
         r = _ligne(ws, r, lib, [v], fmt)
     r += 1
-    r = _entetes(ws, r, [c[1] for c in EXP_COLS])
+    cols_exp = [c for c in EXP_COLS if avec_brs or c[0] != "redevances_brs"]
+    r = _entetes(ws, r, [c[1] for c in cols_exp])
     for l in e["lignes"]:
-        for i, (key, _, fmt) in enumerate(EXP_COLS, start=1):
+        for i, (key, _, fmt) in enumerate(cols_exp, start=1):
             cell = ws.cell(row=r, column=i, value=l.get(key))
             cell.number_format = fmt
             cell.border = BOX
         r += 1
-    if e["brs"]:
+    if e["brs"] and not avec_brs:
         r += 1
         rubrique_cell(ws.cell(row=r, column=1), "COMPTE OFS — BRS (redevances foncières / portage du foncier)")
         r += 1
@@ -361,16 +365,16 @@ def feuille_exploitation(ws, data: dict, res: dict) -> None:
 
 
 # ─────────────────────────────────────────────────────── 8. synthèse
-def feuille_synthese(ws, data: dict, res: dict) -> None:
-    s = res["synthese"]
-    r = _titre(ws, "Synthèse — Simulation financière de l'opération",
+def feuille_synthese(ws, data: dict, res: dict, avec_brs: bool = True) -> None:
+    s = res["synthese" if avec_brs else "synthese_sans_brs"]
+    r = _titre(ws, "Synthèse — Simulation financière de l'opération" + (" (avec BRS)" if avec_brs else " (sans BRS)"),
                f"{s['titre']} (zones {s['zones']['zone_123']} / {s['zones']['zone_abc']}) — livraison {s['annee_livraison']}")
     for lib, v, fmt in (
         ("Nombre de logements", s["nb_logements"], NUM_FMT), ("SHAB totale (m²)", s["shab"], DEC_FMT),
         ("Prix de revient total TTC", s["prix_revient_ttc"], MONEY_FMT),
         ("Prix de revient / logement", s["prix_revient_logt"], MONEY_FMT),
         ("Prix de revient / m² SHAB", s["prix_revient_m2"], MONEY_FMT),
-        ("Autofinancement net — année 1 (locatif)", s["autofinancement_net_a1"], MONEY_FMT_NEG_RED),
+        ("Autofinancement net — année 1", s["autofinancement_net_a1"], MONEY_FMT_NEG_RED),
         ("DSCR — année 1", s["dscr_a1"], "0.00"),
         ("Année de retour à l'équilibre (cumul > 0)", s["annee_equilibre"] or "Non atteint", "0"),
         ("Fonds propres (total)", s["fonds_propres_total"], MONEY_FMT),
@@ -410,14 +414,27 @@ ONGLETS: dict[str, tuple[str, Callable]] = {
 }
 
 
-def build_simulateur_xlsx(data: dict, res: dict, onglet: str) -> BytesIO:
+PERIMETRES = {"exploitation": "7. Exploitation", "synthese": "8. Synthèse"}  # onglets déclinés avec et sans BRS (titres courts : 31 car. max)
+
+
+def build_simulateur_xlsx(data: dict, res: dict, onglet: str, brs: str = "avec") -> BytesIO:
+    """brs : « avec » ou « sans » pour l'export d'un onglet 7 ou 8 ; le classeur complet contient les deux."""
     wb = Workbook()
     wb.remove(wb.active)
-    cles = list(ONGLETS) if onglet == "complet" else [onglet]
-    for cle in cles:
+    a_des_brs = res["synthese"]["a_des_brs"]
+    feuilles: list[tuple[str, Callable, dict]] = []
+    for cle in (list(ONGLETS) if onglet == "complet" else [onglet]):
         titre, fn = ONGLETS[cle]
+        if cle not in PERIMETRES or not a_des_brs:
+            feuilles.append((titre, fn, {"avec_brs": False} if cle == "exploitation" else {}))
+        elif onglet == "complet":
+            feuilles += [(f"{PERIMETRES[cle]} avec BRS", fn, {"avec_brs": True}), (f"{PERIMETRES[cle]} sans BRS", fn, {"avec_brs": False})]
+        else:
+            avec = brs != "sans"
+            feuilles.append((f"{PERIMETRES[cle]} {'avec' if avec else 'sans'} BRS", fn, {"avec_brs": avec}))
+    for titre, fn, opts in feuilles:
         ws = wb.create_sheet(titre[:31])
-        fn(ws, data, res)
+        fn(ws, data, res, **opts)
         ws.sheet_view.showGridLines = False
     buf = BytesIO()
     wb.save(buf)

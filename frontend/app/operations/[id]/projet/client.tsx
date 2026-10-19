@@ -70,7 +70,7 @@ export function ProjetClient({ opId }: { opId: number }) {
     <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-[1600px]">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
-          <div className="text-[11px] uppercase tracking-widest text-ink-500">Gestion de projet · {planning.operation.code}</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">Suivi des opérations · {planning.operation.code}</div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-0.5">{planning.operation.nom}</h1>
           <p className="text-xs text-ink-500 mt-1">
             {p.debut && p.fin ? `Du ${fmtJour(p.debut)} au ${fmtJour(p.fin)}` : "Aucune date planifiée"}

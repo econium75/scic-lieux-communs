@@ -231,7 +231,7 @@ def certificat(document: dict, versions: list[dict], signatures: list[dict], gen
         y -= dy
 
     ligne("Certificat de signature électronique", 16, True, (0.12, 0.23, 0.41), 22)
-    ligne("Téo — porte-documents de la SCIC Lieux Communs", 9, couleur=(0.42, 0.45, 0.56), dy=24)
+    ligne("Téo — porte-documents de la SCIC Faire Commun", 9, couleur=(0.42, 0.45, 0.56), dy=24)
     ligne(f"Document : {document['titre']} (n° {document['id']})", 11, True)
     ligne(f"Fichier : {document['nom_fichier']} — propriétaire : {document['proprietaire']}")
     ligne(f"Version courante : v{document['version_courante']}", dy=22)

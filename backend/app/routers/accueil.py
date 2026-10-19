@@ -148,8 +148,8 @@ def ma_journee(session: Session = Depends(get_session), user: User | None = Depe
                 for a in r["alertes"]:
                     if a["niveau"] in alertes:
                         alertes[a["niveau"]] += 1
-                if r["programme"]["total"]["nb_locatif"]:
-                    autof = r["exploitation"]["kpis"]["autofinancement_net_a1"]
+                if r["programme"]["total"]["nb"]:  # vue complète de l'opération (avec BRS), comme le tableau de bord
+                    autof = r["synthese"]["autofinancement_net_a1"]
             except Exception:  # une simulation incomplète ne doit pas bloquer l'accueil
                 pass
         phase_en_cours = next((p["nom"] for p in pl["phases"] if p["statut"] == "en_cours"), None)

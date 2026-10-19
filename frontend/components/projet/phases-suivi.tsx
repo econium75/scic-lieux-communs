@@ -71,7 +71,7 @@ export function PhasesSuivi({
       {/* Frise */}
       <div className="rounded-sm border border-paper-200 bg-white p-5">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-[11px] uppercase tracking-widest text-ink-500">Suivi de projet</div>
+          <div className="text-[11px] uppercase tracking-widest text-ink-500">Suivi de l'opération</div>
           <div className="text-xs text-ink-500">{terminees} / {phases.length} phases terminées · avancement global {planning.projet.avancement} %</div>
         </div>
         <div className="relative">

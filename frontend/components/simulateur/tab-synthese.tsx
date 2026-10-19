@@ -1,13 +1,14 @@
 "use client";
 import { AlertOctagon, AlertTriangle, Info } from "lucide-react";
-import { ONGLETS } from "@/lib/simulateur";
+import { ONGLETS, selonPerimetre } from "@/lib/simulateur";
 import { cn } from "@/lib/format";
-import { Kpi, ReadOnlyBanner, Section, eur, num, pct, th, td, tdNum } from "./ui";
+import { Kpi, PerimetreSelect, ReadOnlyBanner, Section, eur, num, pct, th, td, tdNum } from "./ui";
 import { AutofinancementChart } from "./autofinancement-chart";
 import type { TabProps } from "./tab-props";
 
-export function TabSynthese({ result, goTo }: TabProps) {
-  const s = result.synthese;
+export function TabSynthese({ result, goTo, brs, setBrs }: TabProps) {
+  const { synthese: s, exploitation } = selonPerimetre(result, brs);
+  const avecBrs = s.perimetre === "avec_brs" && s.a_des_brs;
   const alertes = result.alertes;
   const repartition = s.repartition.filter((r) => r.nb > 0 || r.prix_revient_ttc !== 0);
   const total = repartition.reduce(
@@ -20,8 +21,12 @@ export function TabSynthese({ result, goTo }: TabProps) {
     <div>
       <ReadOnlyBanner>Synthèse calculée, non modifiable — exportable en Excel (bouton « Exporter l'onglet »).</ReadOnlyBanner>
 
+      <PerimetreSelect value={brs} onChange={setBrs} aDesBrs={result.synthese.a_des_brs} />
+
       <div className="mb-4">
-        <div className="text-[11px] uppercase tracking-widest text-ink-500">Synthèse — simulation financière de l'opération</div>
+        <div className="text-[11px] uppercase tracking-widest text-ink-500">
+          Synthèse — simulation financière de l'opération{s.a_des_brs ? (avecBrs ? " · avec BRS" : " · sans BRS") : ""}
+        </div>
         <h2 className="font-serif text-xl text-ink-900 mt-0.5">
           {s.titre} <span className="text-ink-500 text-base">(zones {s.zones.zone_123} / {s.zones.zone_abc} · livraison {s.annee_livraison})</span>
         </h2>
@@ -35,7 +40,7 @@ export function TabSynthese({ result, goTo }: TabProps) {
         <Kpi label="Total emprunts" value={eur(s.emprunts_total)} sub={`annuités année 1 : ${eur(s.annuites_a1)}`} />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 mb-5">
-        <Kpi label="Autofinancement net année 1" value={eur(s.autofinancement_net_a1)} tone={s.autofinancement_net_a1 < 0 ? "danger" : "ok"} sub="locatif" />
+        <Kpi label="Autofinancement net année 1" value={eur(s.autofinancement_net_a1)} tone={s.autofinancement_net_a1 < 0 ? "danger" : "ok"} sub={avecBrs ? "locatif + compte OFS" : "locatif"} />
         <Kpi label="DSCR année 1" value={s.dscr_a1 === null ? "—" : num(s.dscr_a1, 2)} tone={s.dscr_a1 !== null && s.dscr_a1 < 1 ? "warn" : "default"} />
         <Kpi label="Retour à l'équilibre" value={s.annee_equilibre ? `année ${s.annee_equilibre}` : "non atteint"} tone={s.annee_equilibre ? "default" : "danger"} />
         {s.brs.produit_cession_ht > 0 && <Kpi label="Cession BRS (HT)" value={eur(s.brs.produit_cession_ht)} sub={`marge : ${eur(s.brs.marge_cession)}`} />}
@@ -122,10 +127,10 @@ export function TabSynthese({ result, goTo }: TabProps) {
         )}
       </Section>
 
-      {result.programme.total.nb_locatif > 0 && (
-        <Section title="Autofinancement net du locatif">
+      {(result.programme.total.nb_locatif > 0 || avecBrs) && (
+        <Section title={avecBrs ? "Autofinancement net — locatif et compte OFS" : "Autofinancement net du locatif"}>
           <div className="p-3 sm:p-4">
-            <AutofinancementChart lignes={result.exploitation.lignes} height={240} />
+            <AutofinancementChart lignes={exploitation.lignes} height={240} />
           </div>
         </Section>
       )}

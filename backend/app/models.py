@@ -1,4 +1,4 @@
-"""Modèles de données SQLModel pour SCIC Lieux Communs."""
+"""Modèles de données SQLModel pour Téo (SCIC Faire Commun)."""
 from datetime import date, datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field, Relationship, JSON, Column
@@ -103,7 +103,7 @@ class User(SQLModel, table=True):
 
 
 class Phase(SQLModel, table=True):
-    """Suivi de projet — chaque opération a une séquence de phases avec jalons."""
+    """Suivi des opérations — chaque opération a une séquence de phases avec jalons."""
     id: Optional[int] = Field(default=None, primary_key=True)
     operation_id: int = Field(foreign_key="operation.id", index=True)
     ordre: int = Field(default=0)

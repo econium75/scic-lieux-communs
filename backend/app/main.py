@@ -49,7 +49,7 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.version,
     description=(
-        "API de Téo, outil de la SCIC Lieux Communs. "
+        "API de Téo, outil de la SCIC Faire Commun. "
         "Trois moteurs métier : bilan d'opération (M2), "
         "exploitation locative (M3), commercialisation BRS (M4)."
     ),
@@ -83,7 +83,7 @@ app.include_router(imports.router, prefix="/api/imports", tags=["Imports batch"]
 app.include_router(simulations.router, prefix="/api/simulations", tags=["Simulateur 8 onglets"])
 app.include_router(documents.router, prefix="/api/documents", tags=["Porte-documents"])
 app.include_router(taches.router, prefix="/api/taches", tags=["Tâches"])
-app.include_router(projet.router, prefix="/api/projet", tags=["Gestion de projet"])
+app.include_router(projet.router, prefix="/api/projet", tags=["Suivi des opérations"])
 app.include_router(accueil.router, prefix="/api/accueil", tags=["Ma journée"])
 
 

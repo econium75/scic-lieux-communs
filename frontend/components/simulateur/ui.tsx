@@ -304,3 +304,32 @@ export function ReadOnlyBanner({ children }: { children: React.ReactNode }) {
 export const th = "px-3 py-2 text-[11px] uppercase tracking-widest text-ink-500 font-medium whitespace-nowrap";
 export const td = "px-3 py-1.5 tabular-nums whitespace-nowrap";
 export const tdNum = "px-3 py-1.5 tabular-nums text-right whitespace-nowrap";
+
+/** Choix du périmètre des onglets 7 et 8 : avec ou sans les logements BRS. */
+export function PerimetreSelect({ value, onChange, aDesBrs }: { value: "avec" | "sans"; onChange: (v: "avec" | "sans") => void; aDesBrs: boolean }) {
+  if (!aDesBrs) return null;
+  const opts = [
+    { v: "avec" as const, l: "Avec BRS", aide: "Locatif et compte OFS des BRS consolidés" },
+    { v: "sans" as const, l: "Sans BRS", aide: "Partie locative seule (PLAI, PLUS, PLS, PLI)" },
+  ];
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-3">
+      <span className="text-[11px] uppercase tracking-widest text-ink-500 font-medium">Périmètre</span>
+      <div role="group" aria-label="Périmètre du calcul" className="inline-flex rounded-sm border border-paper-200 bg-white p-0.5">
+        {opts.map((o) => (
+          <button
+            key={o.v}
+            type="button"
+            aria-pressed={value === o.v}
+            title={o.aide}
+            onClick={() => onChange(o.v)}
+            className={cn("text-xs px-3 py-1.5 rounded-sm font-medium transition", value === o.v ? "bg-brand-500 text-white" : "text-ink-700 hover:bg-paper-100")}
+          >
+            {o.l}
+          </button>
+        ))}
+      </div>
+      <span className="text-xs text-ink-500">{opts.find((o) => o.v === value)?.aide}</span>
+    </div>
+  );
+}

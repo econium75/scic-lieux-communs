@@ -1,4 +1,4 @@
-"""Gestion de projet : planning (diagramme de Gantt) par opération, adossé aux phases de suivi."""
+"""Suivi des opérations : planning (diagramme de Gantt) par opération, adossé aux phases de suivi."""
 from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
 

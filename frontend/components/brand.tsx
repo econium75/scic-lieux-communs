@@ -1,6 +1,7 @@
 import { cn } from "@/lib/format";
 
-/** Identité de l'outil : Téo (SCIC Lieux Communs). */
+/** Identité de l'outil : Téo (SCIC Faire Commun). */
+export const NOM_SCIC = "Faire Commun";
 export const NOM_OUTIL = "Téo";
 
 export function Brand({ taille = "normal" }: { taille?: "compact" | "normal" | "grand" }) {
@@ -12,7 +13,7 @@ export function Brand({ taille = "normal" }: { taille?: "compact" | "normal" | "
       </div>
       <div className="leading-tight">
         <div className={cn("font-serif font-bold text-ink-900", taille === "compact" ? "text-sm" : "text-lg")}>{NOM_OUTIL}</div>
-        {taille !== "compact" && <div className="text-[11px] tracking-wider text-ink-500 uppercase">SCIC</div>}
+        {taille !== "compact" && <div className="text-[11px] tracking-wider text-ink-500 uppercase">{NOM_SCIC}</div>}
       </div>
     </div>
   );

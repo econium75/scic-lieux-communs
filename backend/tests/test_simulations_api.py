@@ -86,7 +86,17 @@ def test_exports(client, onglet):
     r = client.get(f"/api/simulations/operation/1/export/{onglet}")
     assert r.status_code == 200
     wb = load_workbook(BytesIO(r.content))
-    assert len(wb.sheetnames) == (8 if onglet == "complet" else 1)
+    # classeur complet : les onglets 7 et 8 existent avec et sans BRS (l'opération de démonstration a des BRS)
+    assert len(wb.sheetnames) == (10 if onglet == "complet" else 1)
+
+
+@pytest.mark.parametrize("brs", ["avec", "sans"])
+def test_export_exploitation_par_perimetre(client, brs):
+    r = client.get(f"/api/simulations/operation/1/export/exploitation?brs={brs}")
+    assert r.status_code == 200
+    assert f"_{brs}_brs.xlsx" in r.headers["content-disposition"]
+    wb = load_workbook(BytesIO(r.content))
+    assert wb.sheetnames == [f"7. Exploitation {brs} BRS"]
 
 
 def test_bareme_dans_referentiels(client):

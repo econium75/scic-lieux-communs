@@ -103,6 +103,27 @@ def test_exploitation_50_ans(res):
     assert len(e["brs"]) == 50  # compte OFS séparé
 
 
+def test_exploitation_avec_brs_consolide_locatif_et_compte_ofs(res):
+    sans, avec = res["exploitation"], res["exploitation_avec_brs"]
+    assert sans["perimetre"] == "sans_brs" and avec["perimetre"] == "avec_brs"
+    assert sans["lignes"][0]["redevances_brs"] == 0
+    ofs_a1 = sans["brs"][0]["solde"]
+    # année 1 : autofinancement consolidé = locatif + solde du compte OFS
+    assert avec["kpis"]["autofinancement_net_a1"] == pytest.approx(sans["kpis"]["autofinancement_net_a1"] + ofs_a1)
+    assert avec["kpis"]["nb_logements"] == 30 and sans["kpis"]["nb_logements"] == 14
+
+
+def test_synthese_avec_et_sans_brs(res):
+    avec, sans = res["synthese"], res["synthese_sans_brs"]
+    assert avec["a_des_brs"] and avec["nb_logements"] == 30 and sans["nb_logements"] == 14
+    assert {r["produit"] for r in sans["repartition"]} == {"PLAI", "PLUS", "PLS", "PLI"}
+    assert sans["prix_revient_ttc"] == pytest.approx(res["prix_revient"]["ttc"]["total"] - res["prix_revient"]["ttc"]["BRS"])
+    assert sans["brs"]["solde_ofs_a1"] is None and sans["cession_affectee"] == 0
+    assert sum(x["part"] for x in sans["structure"]) == pytest.approx(1.0)
+    assert sans["autofinancement_net_a1"] == pytest.approx(res["exploitation"]["kpis"]["autofinancement_net_a1"])
+    assert avec["autofinancement_net_a1"] == pytest.approx(res["exploitation_avec_brs"]["kpis"]["autofinancement_net_a1"])
+
+
 def test_synthese_lignes_non_interverties(res):
     rep = {r["produit"]: r for r in res["synthese"]["repartition"]}
     assert rep["PLAI"]["nb"] == 3 and rep["PLUS"]["nb"] == 6 and rep["PLS"]["nb"] == 5

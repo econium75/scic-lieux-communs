@@ -1,4 +1,4 @@
-import type { OngletKey, SimData, SimResult } from "@/lib/simulateur";
+import type { OngletKey, PerimetreBRS, SimData, SimResult } from "@/lib/simulateur";
 
 export type TabProps = {
   opId: number;
@@ -10,4 +10,7 @@ export type TabProps = {
   replace: (d: SimData) => void;
   canEdit: boolean;
   goTo: (k: OngletKey) => void;
+  /** Onglets 7 et 8 : avec ou sans les logements BRS. */
+  brs: PerimetreBRS;
+  setBrs: (b: PerimetreBRS) => void;
 };

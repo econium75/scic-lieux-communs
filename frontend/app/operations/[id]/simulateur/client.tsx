@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Save, RotateCcw, FileDown, Files, Lock, AlertTriangle, ChevronRight, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { getUser } from "@/lib/auth";
-import { ONGLETS, exportUrl, type OngletKey, type SimData, type SimResult, type SimulationPayload } from "@/lib/simulateur";
+import { ONGLETS, exportUrl, type OngletKey, type PerimetreBRS, type SimData, type SimResult, type SimulationPayload } from "@/lib/simulateur";
 import { cn } from "@/lib/format";
 import { Btn } from "@/components/simulateur/ui";
 import { TabHypotheses } from "@/components/simulateur/tab-hypotheses";
@@ -37,6 +37,7 @@ export function SimulateurClient({ opId, initial }: { opId: number; initial: Sim
   const searchParams = useSearchParams();
   const ongletUrl = searchParams.get("onglet");
   const [onglet, setOnglet] = useState<OngletKey>(estOnglet(ongletUrl) ? ongletUrl : "hypotheses");
+  const [brs, setBrsState] = useState<PerimetreBRS>(searchParams.get("brs") === "sans" ? "sans" : "avec");
   const [saved, setSaved] = useState<SimulationPayload>(initial);
   const [data, setData] = useState<SimData>(initial.data);
   const [result, setResult] = useState<SimResult>(initial.result);
@@ -61,10 +62,22 @@ export function SimulateurClient({ opId, initial }: { opId: number; initial: Sim
     if (estOnglet(ongletUrl)) setOnglet(ongletUrl);
   }, [ongletUrl]);
 
+  const brsRef = useRef(brs);
+  brsRef.current = brs;
+  const urlEtat = (k: OngletKey, b: PerimetreBRS) => `?onglet=${k}${b === "sans" ? "&brs=sans" : ""}`;
+
   const goTo = useCallback((k: OngletKey) => {
     setOnglet(k);
-    window.history.replaceState(null, "", `?onglet=${k}`);
+    window.history.replaceState(null, "", urlEtat(k, brsRef.current));
     window.scrollTo({ top: 0 });
+  }, []);
+
+  const setBrs = useCallback((b: PerimetreBRS) => {
+    setBrsState(b);
+    setOnglet((k) => {
+      window.history.replaceState(null, "", urlEtat(k, b));
+      return k;
+    });
   }, []);
 
   // Recalcul en direct (debounce) à chaque modification
@@ -183,7 +196,7 @@ export function SimulateurClient({ opId, initial }: { opId: number; initial: Sim
             </span>
           )}
           {dirty && <span className="text-[11px] text-warn-500 font-medium">Modifications non enregistrées</span>}
-          <a href={exportUrl(opId, onglet)} className="text-xs px-3 py-1.5 rounded-sm border border-paper-200 bg-white hover:bg-paper-50 inline-flex items-center gap-1.5 text-ink-700" title={dirty ? "L'export reprend la dernière version enregistrée" : undefined}>
+          <a href={exportUrl(opId, onglet, brs)} className="text-xs px-3 py-1.5 rounded-sm border border-paper-200 bg-white hover:bg-paper-50 inline-flex items-center gap-1.5 text-ink-700" title={dirty ? "L'export reprend la dernière version enregistrée" : undefined}>
             <FileDown size={13} /> Exporter l'onglet
           </a>
           <a href={exportUrl(opId, "complet")} className="text-xs px-3 py-1.5 rounded-sm border border-paper-200 bg-white hover:bg-paper-50 inline-flex items-center gap-1.5 text-ink-700">
@@ -271,6 +284,8 @@ export function SimulateurClient({ opId, initial }: { opId: number; initial: Sim
         replace={replace}
         canEdit={canEdit && courant.editable}
         goTo={goTo}
+        brs={brs}
+        setBrs={setBrs}
       />
 
       {suivant && (

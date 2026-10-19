@@ -8,8 +8,8 @@ import { PWARegister } from "@/components/pwa-register";
 const publicSans = Public_Sans({ subsets: ["latin"], variable: "--font-public-sans", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Téo — SCIC",
-  description: "Téo, l'outil de la SCIC Lieux Communs : montage financier des opérations, gestion de projet, tâches et documents.",
+  title: "Téo — Faire Commun",
+  description: "Téo, l'outil de la SCIC Faire Commun : montage financier et suivi des opérations, suivi des projets, facturation, tâches et documents.",
   manifest: "/manifest.json",
   applicationName: "Téo",
   appleWebApp: {

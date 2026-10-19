@@ -1,4 +1,4 @@
-"""Suivi de projet par phases."""
+"""Suivi des opérations par phases."""
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
