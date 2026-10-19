@@ -48,10 +48,14 @@ def _ensure_defaults(session: Session) -> None:
     session.commit()
 
 
+# Paramètres gérés par leurs propres écrans (suivi des projets, facturation) : absents de la page « Barèmes & paramètres »
+REFERENTIELS_INTERNES = {"identite_scic", "parcours_projet"}
+
+
 @router.get("")
 def list_referentiels(session: Session = Depends(get_session)) -> list[Referentiel]:
     _ensure_defaults(session)
-    return list(session.exec(select(Referentiel)).all())
+    return [r for r in session.exec(select(Referentiel)).all() if r.code not in REFERENTIELS_INTERNES]
 
 
 @router.get("/{code}")

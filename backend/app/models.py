@@ -273,3 +273,71 @@ class Briefing(SQLModel, table=True):
     duree_estimee_sec: int = Field(default=0)
     created_at: datetime = Field(default_factory=_utcnow)
     lu: bool = Field(default=False)
+
+
+class Projet(SQLModel, table=True):
+    """Projet accompagné par la SCIC : parcours d'étapes, contrats et conventions générés, facturation à l'avancement."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    code: str = Field(index=True, unique=True)  # PRJ-2026-001
+    nom: str
+    client_nom: str = Field(default="")
+    client_adresse: str = Field(default="")
+    client_siren: str = Field(default="")
+    client_contact: str = Field(default="")  # nom et fonction du signataire
+    client_email: str = Field(default="")
+    operation_id: Optional[int] = Field(default=None, foreign_key="operation.id", index=True)
+    responsable: str = Field(default="")  # username
+    montant_ht: float = Field(default=0.0)  # honoraires de la mission
+    taux_tva: float = Field(default=0.20)
+    statut: str = Field(default="en_cours")  # en_cours | termine | suspendu | abandonne
+    date_debut: Optional[date] = None
+    # [{id, nom, description, part (0-1), statut: a_venir|en_cours|terminee, date_prevue, date_realisation,
+    #   modeles: [ids ModeleDocument], documents: [ids Document]}]
+    etapes: list = Field(default_factory=list, sa_column=Column(JSON))
+    # Documents générés depuis les modèles : [{document_id, modele_id, etape_id, titre, par, at}]
+    documents: list = Field(default_factory=list, sa_column=Column(JSON))
+    notes: str = Field(default="")
+    cree_par: str = Field(default="")
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
+class ModeleDocument(SQLModel, table=True):
+    """Modèle de contrat ou de convention : texte avec des champs {{…}} remplis à la génération."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    titre: str
+    categorie: str = Field(default="convention")  # contrat | convention | avenant | autre
+    contenu: str = Field(default="")
+    actif: bool = Field(default=True)
+    updated_by: str = Field(default="")
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
+class Facture(SQLModel, table=True):
+    """Facture ou avoir. Le numéro est attribué à l'émission ; une facture émise n'est plus modifiable."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    numero: Optional[str] = Field(default=None, index=True, unique=True)
+    type: str = Field(default="facture")  # facture | avoir
+    facture_origine_id: Optional[int] = Field(default=None, foreign_key="facture.id")
+    projet_id: Optional[int] = Field(default=None, foreign_key="projet.id", index=True)
+    etape_id: str = Field(default="")
+    client_nom: str = Field(default="")
+    client_adresse: str = Field(default="")
+    client_siren: str = Field(default="")
+    objet: str = Field(default="")
+    lignes: list = Field(default_factory=list, sa_column=Column(JSON))  # [{designation, quantite, prix_unitaire_ht, taux_tva}]
+    total_ht: float = Field(default=0.0)
+    total_tva: float = Field(default=0.0)
+    total_ttc: float = Field(default=0.0)
+    statut: str = Field(default="brouillon", index=True)  # brouillon | emise | payee | annulee
+    date_emission: Optional[date] = None
+    date_echeance: Optional[date] = None
+    date_paiement: Optional[date] = None
+    mode_paiement: str = Field(default="")
+    chemin_pdf: str = Field(default="")  # relatif à data/factures/ (fichier figé à l'émission)
+    notes: str = Field(default="")
+    rappel_retard_envoye: bool = Field(default=False)
+    cree_par: str = Field(default="")
+    emise_par: str = Field(default="")
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)

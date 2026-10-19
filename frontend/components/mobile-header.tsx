@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import type { Operation } from "@/lib/types";
 import { SidebarOperation } from "@/components/sidebar-operation";
 import { EquipeNav } from "@/components/equipe-nav";
+import { ProjetsNav } from "@/components/projets-nav";
 import { Brand } from "@/components/brand";
 import { AccueilLien } from "@/components/accueil-lien";
 import { AuthBadge } from "@/components/auth-badge";
@@ -80,6 +81,8 @@ export function MobileHeader() {
               <Suspense>
                 <SidebarOperation operations={operations} />
               </Suspense>
+
+              <ProjetsNav />
 
               <EquipeNav />
 

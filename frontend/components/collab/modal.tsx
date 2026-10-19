@@ -46,6 +46,8 @@ export function Modal({
 export const champ =
   "w-full px-2.5 py-1.5 border border-paper-200 rounded-sm text-sm bg-white focus:outline-none focus:border-brand-500";
 export const etiquette = "block text-[11px] text-ink-700 mb-1";
+/** Même style que `champ`, sans largeur imposée (à compléter par w-20, w-40…). */
+export const champCourt = champ.replace("w-full ", "");
 
 export function Bouton({
   children,

@@ -4,6 +4,7 @@ import { Sliders, ArrowLeftRight, FileClock } from "lucide-react";
 import { api } from "@/lib/api";
 import { AuthBadge } from "@/components/auth-badge";
 import { EquipeNav } from "@/components/equipe-nav";
+import { ProjetsNav } from "@/components/projets-nav";
 import { Brand } from "@/components/brand";
 import { AccueilLien } from "@/components/accueil-lien";
 import { NotificationsBell } from "@/components/notifications-bell";
@@ -34,6 +35,8 @@ export async function Sidebar() {
       <Suspense>
         <SidebarOperation operations={operations} />
       </Suspense>
+
+      <ProjetsNav dense />
 
       <EquipeNav dense />
 

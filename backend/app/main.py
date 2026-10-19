@@ -26,6 +26,8 @@ from .routers import (
     taches,
     projet,
     accueil,
+    projets,
+    factures,
 )
 
 
@@ -36,6 +38,7 @@ async def lifespan(app: FastAPI):
     seed_if_empty()
     simulations.seed_simulations()
     projet.seed_planning()
+    projets.seed_modeles()
     # Seed users
     from .db import engine
     from sqlmodel import Session
@@ -85,6 +88,8 @@ app.include_router(documents.router, prefix="/api/documents", tags=["Porte-docum
 app.include_router(taches.router, prefix="/api/taches", tags=["Tâches"])
 app.include_router(projet.router, prefix="/api/projet", tags=["Suivi des opérations"])
 app.include_router(accueil.router, prefix="/api/accueil", tags=["Ma journée"])
+app.include_router(projets.router, prefix="/api/projets", tags=["Suivi des projets"])
+app.include_router(factures.router, prefix="/api/factures", tags=["Facturation"])
 
 
 @app.get("/api/health")
