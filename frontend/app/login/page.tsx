@@ -70,17 +70,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 rounded-sm border border-paper-200 bg-paper-50 p-4 text-xs text-ink-500">
-          <div className="font-medium text-ink-700 mb-2">Comptes de démonstration</div>
-          <ul className="space-y-1 font-mono text-[11px]">
-            <li>admin / admin123 — tous droits</li>
-            <li>saisie / saisie123 — CRUD opérations, hypothèses, exports</li>
-            <li>lecture / lecture123 — lecture seule + exports</li>
-          </ul>
-          <div className="mt-3 text-[11px] italic">
-            À changer avant mise en production — gérés en DB table `user`.
-          </div>
-        </div>
+        <p className="mt-6 text-xs text-ink-500 text-center">
+          Identifiants fournis par l'administrateur de la SCIC. Mot de passe oublié : contactez-le.
+        </p>
       </div>
     </div>
   );
