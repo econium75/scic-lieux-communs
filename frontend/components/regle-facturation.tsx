@@ -14,7 +14,7 @@ export function EditeurRegle({ r, onChange, disabled }: { r: RegleFacturation; o
   }, [r.mode]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs">
-      <select aria-label="Facturation" disabled={disabled} className={cn(champCourt, "w-36")} value={r.mode}
+      <select aria-label="Facturation" disabled={disabled} className={cn(champCourt, "w-44")} value={r.mode}
         onChange={(e) => onChange({ ...r, mode: e.target.value as RegleFacturation["mode"] })}>
         <option value="aucune">Pas de facturation</option>
         <option value="forfait">Forfait</option>

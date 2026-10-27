@@ -101,7 +101,7 @@ function EditeurParcours({ dire }: { dire: Dire }) {
                 <button onClick={() => deplacer(i, 1)} className="p-1 text-ink-500 hover:text-ink-900" aria-label="Descendre"><ArrowDown size={14} /></button>
                 <button onClick={() => setP({ ...p, etapes: etapes.filter((_, j) => j !== i) })} className="p-1 text-ink-500 hover:text-danger-500" aria-label="Supprimer l'étape"><Trash2 size={14} /></button>
               </div>
-              <input aria-label="Description" placeholder="Description (facultatif)" className={cn(champ, "ml-7 w-[calc(100%-1.75rem)]")} value={e.description || ""} onChange={(x) => maj(i, { description: x.target.value })} />
+              <input aria-label="Description" placeholder="Description (facultatif)" className={cn(champCourt, "ml-7 w-[calc(100%-1.75rem)]")} value={e.description || ""} onChange={(x) => maj(i, { description: x.target.value })} />
               <div className="ml-7"><EditeurRegle r={e.facturation} onChange={(r) => maj(i, { facturation: r })} /></div>
               <div className="ml-7 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-700">
                 <span className="text-ink-500">Documents à générer :</span>
