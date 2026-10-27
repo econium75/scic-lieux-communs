@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle, ArrowRight, CalendarDays, Check, CheckCircle2, ClipboardList, Diamond, Eye, FileSignature, FileText,
-  GanttChartSquare, Headphones, LogIn, MapPin, PenLine, Send, Sparkles, X,
+  GanttChartSquare, LogIn, MapPin, PenLine, Send, Sparkles, X,
 } from "lucide-react";
 import { accueil, type ElementAFaire, type MaJourneeData } from "@/lib/accueil";
 import { collab, LIBELLES_TYPE } from "@/lib/collab";
@@ -114,9 +114,6 @@ export function MaJournee() {
             {c.en_retard > 0 && <span className="text-danger-500 font-medium">, dont {c.en_retard} en retard</span>}
           </p>
         </div>
-        <Link href="/briefing" className="text-xs px-3 py-2 rounded-sm border border-paper-200 bg-white hover:border-brand-500 inline-flex items-center gap-2 text-ink-700">
-          <Headphones size={14} className="text-brand-500" /> {data.briefing ? "Écouter le briefing du jour" : "Générer mon briefing audio"}
-        </Link>
       </div>
 
       {msg && (

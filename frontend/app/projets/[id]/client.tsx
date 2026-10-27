@@ -1,18 +1,19 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowLeft, ArrowUp, Check, FilePlus2, FileSignature, FileText, Pencil, Play, Plus, Receipt, RotateCcw, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, Check, FilePlus2, FileSignature, FileText, HandCoins, Pencil, Play, Plus, Receipt, RotateCcw, Trash2, X } from "lucide-react";
 import { Bouton, Modal, champ, champCourt, etiquette } from "@/components/collab/modal";
 import { BadgeFacture } from "@/components/badge-facture";
+import { EditeurRegle } from "@/components/regle-facturation";
 import { collab, type Membre } from "@/lib/collab";
 import { api } from "@/lib/api";
 import { getUser } from "@/lib/auth";
 import { cn } from "@/lib/format";
 import type { Operation } from "@/lib/types";
 import {
-  STATUT_ETAPE, STATUT_PROJET, dateFr, euros, pourcent, projets,
-  type Etape, type Modele, type ProjetDetail, type StatutProjet,
+  PAYEURS, REGLE_VIDE, STATUT_ETAPE, STATUT_PROJET, dateFr, euros, pourcent, projets,
+  type Etape, type Modele, type Partie, type ProjetDetail, type RegleFacturation, type StatutProjet,
 } from "@/lib/projets";
 
 export function ProjetDetailClient({ id }: { id: number }) {
@@ -53,8 +54,10 @@ export function ProjetDetailClient({ id }: { id: number }) {
         ok: true,
         t: s === "terminee"
           ? f && f.statut === "brouillon"
-            ? `Étape terminée : la facture de ${euros(f.total_ttc, 2)} TTC est prête à être émise.`
-            : "Étape terminée."
+            ? `Étape terminée : la facture de ${euros(f.total_ttc, 2)} TTC à ${e.payeur_nom || PAYEURS[e.facturation.payeur].toLowerCase()} est prête à être émise.`
+            : e.facturation.nature === "financement" && e.facturation.mode !== "aucune"
+              ? `Étape terminée : financement de ${euros(e.montant_ht)} noté comme acquis.`
+              : "Étape terminée."
           : `Étape « ${e.nom} » : ${STATUT_ETAPE[s].toLowerCase()}.`,
       });
     } catch (err) {
@@ -79,6 +82,8 @@ export function ProjetDetailClient({ id }: { id: number }) {
 
   const ttc = p.montant_ht * (1 + p.taux_tva);
   const nomModele = (mid: number) => modeles.find((m) => m.id === mid)?.titre || "Modèle";
+  const phases = Array.from(new Set(p.etapes.map((e) => e.phase || "")));
+  const surHonoraires = p.etapes.some((e) => e.facturation.mode === "pourcentage" && e.facturation.base === "honoraires");
 
   return (
     <div className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 max-w-6xl">
@@ -118,18 +123,25 @@ export function ProjetDetailClient({ id }: { id: number }) {
       )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <Tuile label="Honoraires" value={euros(p.montant_ht)} sub={`HT · ${euros(ttc)} TTC`} />
+        <Tuile label="Honoraires" value={euros(p.montant_ht)}
+          sub={p.ca_previsionnel_ttc > 0 ? `HT · ${pourcent(p.taux_honoraires)} de ${euros(p.ca_previsionnel_ttc)} TTC` : `HT · ${euros(ttc)} TTC`} />
         <Tuile label="Avancement" value={`${p.avancement} %`} sub={`${p.nb_etapes_terminees} étape(s) sur ${p.nb_etapes}`} barre={p.avancement} />
         <Tuile label="Facturé" value={euros(p.facture_ht)} sub={`HT · payé ${euros(p.paye_ttc)} TTC`} />
-        <Tuile label="Reste à facturer" value={euros(p.reste_a_facturer_ht)} sub="hors taxes" />
+        <Tuile label="Reste à facturer" value={euros(p.reste_a_facturer_ht)} sub={`HT, sur ${euros(p.total_facturable_ht)} prévus au parcours`} />
       </div>
 
       <section className="rounded-sm border border-paper-200 bg-white mb-6">
         <div className="px-5 py-3 border-b border-paper-200 flex flex-wrap items-center justify-between gap-2">
           <div>
             <div className="text-[11px] uppercase tracking-widest text-ink-500 font-medium">Parcours du projet</div>
-            {Math.abs(p.somme_parts - 1) > 0.0001 && (
-              <div className="text-xs text-warn-500 mt-0.5">Les parts de facturation totalisent {pourcent(p.somme_parts)} des honoraires (100 % attendus).</div>
+            {surHonoraires && p.montant_ht === 0 && (
+              <div className="text-xs text-warn-500 mt-0.5">Saisissez le chiffre d'affaires prévisionnel TTC (« Modifier ») pour calculer les honoraires.</div>
+            )}
+            {p.montant_ht > 0 && p.part_honoraires_planifiee < 0.9999 && (
+              <div className="text-xs text-warn-500 mt-0.5">
+                Le contrat d'honoraires n'est échelonné qu'à {pourcent(p.part_honoraires_planifiee)} : précisez à quelles étapes facturer
+                les {pourcent(1 - p.part_honoraires_planifiee)} restants ({euros(p.montant_ht * (1 - p.part_honoraires_planifiee))} HT).
+              </div>
             )}
           </div>
           {peutSaisir && <Bouton onClick={() => setModal("etapes")} variante="discret"><Pencil size={12} /> Modifier les étapes</Bouton>}
@@ -137,9 +149,19 @@ export function ProjetDetailClient({ id }: { id: number }) {
         <ol>
           {p.etapes.map((e, i) => {
             const docs = p.documents.filter((d) => d.etape_id === e.id);
+            const debutPhase = !!e.phase && (i === 0 || p.etapes[i - 1].phase !== e.phase);
+            const dansPhase = p.etapes.filter((x) => x.phase === e.phase);
+            const r = e.facturation;
             const verrouillee = !!e.facture && e.facture.statut !== "brouillon";
             return (
-              <li key={e.id} className="px-5 py-4 border-t border-paper-200 first:border-t-0 flex gap-4">
+              <li key={e.id}>
+              {debutPhase && (
+                <div className="px-5 py-2 bg-paper-50 border-t border-paper-200 flex items-center justify-between gap-3">
+                  <span className="text-[11px] uppercase tracking-widest text-ink-700 font-medium">Phase {phases.indexOf(e.phase) + 1} · {e.phase}</span>
+                  <span className="text-[11px] text-ink-500 tabular-nums">{dansPhase.filter((x) => x.statut === "terminee").length}/{dansPhase.length} étapes</span>
+                </div>
+              )}
+              <div className="px-5 py-4 border-t border-paper-200 flex gap-4">
                 <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5",
                   e.statut === "terminee" ? "bg-ok-500 text-white" : e.statut === "en_cours" ? "bg-brand-500 text-white" : "bg-paper-100 text-ink-500 border border-paper-200")}>
                   {e.statut === "terminee" ? <Check size={14} /> : i + 1}
@@ -153,7 +175,13 @@ export function ProjetDetailClient({ id }: { id: number }) {
                   </div>
                   {e.description && <p className="text-xs text-ink-500 mt-0.5">{e.description}</p>}
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs">
-                    <span className="text-ink-700 tabular-nums">{pourcent(e.part)} des honoraires · {euros(e.montant_ht)} HT</span>
+                    {r.mode !== "aucune" && (
+                      <span className={cn("tabular-nums inline-flex items-center gap-1", r.nature === "financement" ? "text-ok-500" : "text-ink-700")}>
+                        {r.nature === "financement" ? <HandCoins size={12} /> : <Receipt size={12} className="text-ink-500" />}
+                        {r.nature === "financement" ? "Financement" : "Facturation"} : {e.regle_libelle.replace(" · financement", "")} · {euros(e.montant_ht)}{r.nature === "facture" ? " HT" : ""}
+                        <span className="text-ink-500"> · {e.payeur_nom || PAYEURS[r.payeur]}</span>
+                      </span>
+                    )}
                     {e.facture && (
                       <Link href={`/facturation?id=${e.facture.id}`} className="inline-flex items-center gap-1 text-brand-500 hover:underline">
                         <Receipt size={12} /> {e.facture.numero ? `Facture ${e.facture.numero}` : "Facture à émettre"} · <BadgeFacture s={e.facture.statut} />
@@ -179,9 +207,11 @@ export function ProjetDetailClient({ id }: { id: number }) {
                       {confirmer === e.id && (
                         <div className="w-full rounded-sm border border-ok-500/40 bg-ok-50 px-3 py-2 text-xs flex flex-wrap items-center gap-2">
                           <span className="flex-1 min-w-[200px]">
-                            {e.montant_ht > 0 && !e.facture
-                              ? `Terminer l'étape prépare une facture de ${euros(e.montant_ht, 2)} HT, à émettre par un administrateur.`
-                              : "Confirmer la fin de l'étape ?"}
+                            {e.montant_ht > 0 && !e.facture && r.nature === "facture"
+                              ? `Terminer l'étape prépare une facture de ${euros(e.montant_ht, 2)} HT adressée à ${e.payeur_nom || PAYEURS[r.payeur].toLowerCase()}, à émettre par un administrateur.`
+                              : e.montant_ht > 0 && r.nature === "financement"
+                                ? `Le financement de ${euros(e.montant_ht)} (${e.payeur_nom || "financeur"}) sera noté comme acquis.`
+                                : "Confirmer la fin de l'étape ?"}
                           </span>
                           <Bouton onClick={() => setConfirmer(null)} variante="discret">Annuler</Bouton>
                           <Bouton onClick={() => statut(e, "terminee")} variante="succes">Confirmer</Bouton>
@@ -196,12 +226,45 @@ export function ProjetDetailClient({ id }: { id: number }) {
                     </div>
                   )}
                 </div>
+              </div>
               </li>
             );
           })}
           {p.etapes.length === 0 && <li className="px-5 py-6 text-sm text-ink-500">Aucune étape : ajoutez-en avec « Modifier les étapes ».</li>}
         </ol>
       </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+        <section className="rounded-sm border border-paper-200 bg-white">
+          <div className="px-5 py-3 border-b border-paper-200 text-[11px] uppercase tracking-widest text-ink-500 font-medium">Parties au projet</div>
+          <dl className="px-5 py-3 grid grid-cols-[9rem_1fr] gap-x-3 gap-y-2 text-sm">
+            <dt className="text-ink-500">Client</dt><dd className="text-ink-900">{p.client_nom || "—"}{p.client_contact && <span className="text-ink-500"> · {p.client_contact}</span>}</dd>
+            {(["collectivite", "promoteur", "financeur"] as const).map((k) => (
+              <Fragment key={k}>
+                <dt className="text-ink-500">{PAYEURS[k]}</dt>
+                <dd className={p.tiers[k].nom ? "text-ink-900" : "text-ink-300"}>{p.tiers[k].nom || "à préciser"}{p.tiers[k].contact && <span className="text-ink-500"> · {p.tiers[k].contact}</span>}</dd>
+              </Fragment>
+            ))}
+          </dl>
+        </section>
+        <section className="rounded-sm border border-paper-200 bg-white">
+          <div className="px-5 py-3 border-b border-paper-200 text-[11px] uppercase tracking-widest text-ink-500 font-medium">Financements</div>
+          {p.financements.length === 0 ? (
+            <div className="px-5 py-5 text-sm text-ink-500">Aucun financement prévu au parcours.</div>
+          ) : (
+            <ul>
+              {p.financements.map((x) => (
+                <li key={x.etape_id} className="px-5 py-3 border-t border-paper-200 first:border-t-0 flex items-center gap-3 text-sm">
+                  <HandCoins size={15} className={x.obtenu ? "text-ok-500" : "text-ink-500"} />
+                  <div className="flex-1 min-w-0"><div className="text-ink-900 truncate">{x.nom}</div><div className="text-[11px] text-ink-500">{x.financeur || "Financeur à préciser"}</div></div>
+                  <span className={cn("text-[11px] font-medium", x.obtenu ? "text-ok-500" : "text-ink-500")}>{x.obtenu ? "Acquis" : "Attendu"}</span>
+                  <span className="tabular-nums text-ink-900 w-24 text-right">{euros(x.montant)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <section className="rounded-sm border border-paper-200 bg-white">
@@ -289,7 +352,9 @@ function ModifierProjet({ p, onClose, onSave }: { p: ProjetDetail; onClose: () =
     nom: p.nom, client_nom: p.client_nom, client_adresse: p.client_adresse, client_siren: p.client_siren, client_contact: p.client_contact,
     client_email: p.client_email, operation_id: p.operation_id ? String(p.operation_id) : "", responsable: p.responsable,
     montant_ht: String(p.montant_ht), taux_tva: String(p.taux_tva), statut: p.statut, notes: p.notes,
+    ca: p.ca_previsionnel_ttc ? String(p.ca_previsionnel_ttc) : "", taux_honoraires: String(Math.round(p.taux_honoraires * 10000) / 100).replace(".", ","),
   });
+  const [tiers, setTiers] = useState<ProjetDetail["tiers"]>(structuredClone(p.tiers));
   const [membres, setMembres] = useState<Membre[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
   const [err, setErr] = useState<string | null>(null);
@@ -303,7 +368,8 @@ function ModifierProjet({ p, onClose, onSave }: { p: ProjetDetail; onClose: () =
       onSave(await projets.modifier(p.id, {
         nom: f.nom, client_nom: f.client_nom, client_adresse: f.client_adresse, client_siren: f.client_siren, client_contact: f.client_contact,
         client_email: f.client_email, operation_id: f.operation_id ? Number(f.operation_id) : null, responsable: f.responsable,
-        montant_ht: Number(f.montant_ht.replace(/\s/g, "").replace(",", ".")) || 0, taux_tva: Number(f.taux_tva), statut: f.statut as StatutProjet, notes: f.notes,
+        montant_ht: nombre(f.montant_ht), taux_tva: Number(f.taux_tva), statut: f.statut as StatutProjet, notes: f.notes,
+        ca_previsionnel_ttc: nombre(f.ca), taux_honoraires: nombre(f.taux_honoraires) / 100, tiers,
       }));
     } catch (e) {
       setErr(String((e as Error).message || e));
@@ -318,7 +384,14 @@ function ModifierProjet({ p, onClose, onSave }: { p: ProjetDetail; onClose: () =
         <div className="sm:col-span-2"><label className={etiquette} htmlFor="mp-adr">Adresse du client</label><textarea id="mp-adr" className={champ} rows={2} value={f.client_adresse} onChange={set("client_adresse")} /></div>
         <div><label className={etiquette} htmlFor="mp-contact">Signataire (nom, fonction)</label><input id="mp-contact" className={champ} value={f.client_contact} onChange={set("client_contact")} /></div>
         <div><label className={etiquette} htmlFor="mp-email">E-mail du client</label><input id="mp-email" className={champ} value={f.client_email} onChange={set("client_email")} /></div>
-        <div><label className={etiquette} htmlFor="mp-ht">Honoraires HT (€)</label><input id="mp-ht" className={champ} inputMode="decimal" value={f.montant_ht} onChange={set("montant_ht")} /></div>
+        <div><label className={etiquette} htmlFor="mp-ca">Chiffre d'affaires prévisionnel TTC (€)</label><input id="mp-ca" className={champ} inputMode="decimal" value={f.ca} onChange={set("ca")} placeholder="prix de vente total" /></div>
+        <div><label className={etiquette} htmlFor="mp-taux">Contrat d'honoraires (% du prix de vente TTC)</label><input id="mp-taux" className={champ} inputMode="decimal" value={f.taux_honoraires} onChange={set("taux_honoraires")} /></div>
+        <div>
+          <label className={etiquette} htmlFor="mp-ht">Honoraires HT (€)</label>
+          {nombre(f.ca) > 0
+            ? <div id="mp-ht" className="text-sm text-ink-900 py-1.5 tabular-nums">{euros(nombre(f.ca) * nombre(f.taux_honoraires) / 100)} <span className="text-ink-500 text-xs">calculés depuis le CA</span></div>
+            : <input id="mp-ht" className={champ} inputMode="decimal" value={f.montant_ht} onChange={set("montant_ht")} />}
+        </div>
         <div>
           <label className={etiquette} htmlFor="mp-tva">TVA</label>
           <select id="mp-tva" className={champ} value={f.taux_tva} onChange={set("taux_tva")}>
@@ -346,21 +419,36 @@ function ModifierProjet({ p, onClose, onSave }: { p: ProjetDetail; onClose: () =
         </div>
         <div className="sm:col-span-2"><label className={etiquette} htmlFor="mp-notes">Notes</label><textarea id="mp-notes" className={champ} rows={3} value={f.notes} onChange={set("notes")} /></div>
       </div>
+      {(["collectivite", "promoteur", "financeur"] as const).map((k) => (
+        <fieldset key={k} className="mt-5 border-t border-paper-200 pt-3">
+          <legend className="text-[11px] uppercase tracking-widest text-ink-500 font-medium pr-2">{PAYEURS[k]}</legend>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+            {([["nom", "Nom"], ["contact", "Signataire (nom, fonction)"], ["adresse", "Adresse"], ["siren", "SIREN"]] as [keyof Partie, string][]).map(([c, l]) => (
+              <div key={c}>
+                <label className={etiquette} htmlFor={`mp-${k}-${c}`}>{l}</label>
+                <input id={`mp-${k}-${c}`} className={champ} value={tiers[k][c]} onChange={(e) => setTiers({ ...tiers, [k]: { ...tiers[k], [c]: e.target.value } })} />
+              </div>
+            ))}
+          </div>
+        </fieldset>
+      ))}
       {err && <div className="mt-3 text-sm text-danger-500">{err}</div>}
     </Modal>
   );
 }
 
-type EtapeEdit = { id?: string; nom: string; description: string; part: string; date_prevue: string; modeles: number[]; statut?: Etape["statut"]; verrouillee: boolean };
+type EtapeEdit = { id?: string; phase: string; nom: string; description: string; facturation: RegleFacturation; date_prevue: string; modeles: number[]; statut?: Etape["statut"]; verrouillee: boolean };
+
+const nombre = (s: string) => Number(String(s).replace(/\s/g, "").replace(",", ".")) || 0;
 
 function ModifierEtapes({ p, modeles, onClose, onSave }: { p: ProjetDetail; modeles: Modele[]; onClose: () => void; onSave: (x: ProjetDetail) => void }) {
   const [rows, setRows] = useState<EtapeEdit[]>(
-    p.etapes.map((e) => ({ id: e.id, nom: e.nom, description: e.description, part: String(Math.round(e.part * 10000) / 100).replace(".", ","),
+    p.etapes.map((e) => ({ id: e.id, phase: e.phase, nom: e.nom, description: e.description, facturation: e.facturation,
       date_prevue: e.date_prevue || "", modeles: e.modeles, statut: e.statut, verrouillee: !!e.facture && e.facture.statut !== "brouillon" }))
   );
   const [err, setErr] = useState<string | null>(null);
-  const num = (s: string) => Number(s.replace(",", ".")) || 0;
-  const total = rows.reduce((a, r) => a + num(r.part), 0);
+  const total = rows.reduce((a, r) => a + (r.facturation.mode === "pourcentage" && r.facturation.base === "honoraires" && r.facturation.nature === "facture" ? r.facturation.taux : 0), 0) * 100;
+  const phases = Array.from(new Set(rows.map((r) => r.phase).filter(Boolean)));
   const maj = (i: number, patch: Partial<EtapeEdit>) => setRows(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const deplacer = (i: number, d: number) => {
     const j = i + d;
@@ -372,7 +460,7 @@ function ModifierEtapes({ p, modeles, onClose, onSave }: { p: ProjetDetail; mode
   const valider = async () => {
     try {
       onSave(await projets.modifier(p.id, {
-        etapes: rows.map((r) => ({ id: r.id, nom: r.nom, description: r.description, part: num(r.part) / 100, date_prevue: r.date_prevue || null,
+        etapes: rows.map((r) => ({ id: r.id, phase: r.phase, nom: r.nom, description: r.description, facturation: r.facturation, date_prevue: r.date_prevue || null,
           modeles: r.modeles, statut: r.statut })),
       }));
     } catch (e) {
@@ -382,7 +470,7 @@ function ModifierEtapes({ p, modeles, onClose, onSave }: { p: ProjetDetail; mode
   return (
     <Modal titre="Étapes du projet" onClose={onClose} large
       pied={<>
-        <span className={cn("mr-auto text-xs tabular-nums", Math.abs(total - 100) > 0.01 ? "text-warn-500" : "text-ok-500")}>Total facturé : {String(Math.round(total * 100) / 100).replace(".", ",")} %</span>
+        <span className={cn("mr-auto text-xs tabular-nums", Math.abs(total - 100) > 0.01 ? "text-warn-500" : "text-ok-500")}>Honoraires échelonnés : {String(Math.round(total * 100) / 100).replace(".", ",")} %</span>
         <Bouton onClick={onClose} variante="discret">Annuler</Bouton><Bouton onClick={valider} variante="primaire">Enregistrer</Bouton>
       </>}>
       <div className="space-y-3">
@@ -391,19 +479,18 @@ function ModifierEtapes({ p, modeles, onClose, onSave }: { p: ProjetDetail; mode
             <div className="flex items-center gap-2">
               <span className="text-xs text-ink-500 w-5">{i + 1}.</span>
               <input aria-label="Nom de l'étape" className={cn(champ, "flex-1 min-w-0")} value={r.nom} onChange={(e) => maj(i, { nom: e.target.value })} />
-              <div className="flex items-center gap-1">
-                <input aria-label="Part des honoraires (%)" className={cn(champCourt, "w-20 shrink-0 text-right")} value={r.part} disabled={r.verrouillee}
-                  onChange={(e) => maj(i, { part: e.target.value })} inputMode="decimal" />
-                <span className="text-xs text-ink-500">%</span>
-              </div>
               <button onClick={() => deplacer(i, -1)} className="p-1 text-ink-500 hover:text-ink-900" aria-label="Monter"><ArrowUp size={14} /></button>
               <button onClick={() => deplacer(i, 1)} className="p-1 text-ink-500 hover:text-ink-900" aria-label="Descendre"><ArrowDown size={14} /></button>
               <button onClick={() => setRows(rows.filter((_, j) => j !== i))} disabled={r.verrouillee} className="p-1 text-ink-500 hover:text-danger-500 disabled:opacity-30"
                 aria-label="Supprimer l'étape" title={r.verrouillee ? "Étape déjà facturée" : undefined}><Trash2 size={14} /></button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 pl-7">
-              <input aria-label="Description" placeholder="Description (facultatif)" className={cn(champ, "sm:col-span-2")} value={r.description} onChange={(e) => maj(i, { description: e.target.value })} />
+              <input aria-label="Phase" placeholder="Phase" list="phases-projet" className={champ} value={r.phase} onChange={(e) => maj(i, { phase: e.target.value })} />
+              <input aria-label="Description" placeholder="Description (facultatif)" className={champ} value={r.description} onChange={(e) => maj(i, { description: e.target.value })} />
               <input aria-label="Date prévue" type="date" className={champ} value={r.date_prevue} onChange={(e) => maj(i, { date_prevue: e.target.value })} />
+            </div>
+            <div className="mt-2 pl-7" title={r.verrouillee ? "Étape déjà facturée : sa règle ne peut plus changer" : undefined}>
+              <EditeurRegle r={r.facturation} disabled={r.verrouillee} onChange={(x) => maj(i, { facturation: x })} />
             </div>
             {modeles.length > 0 && (
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 pl-7 text-xs text-ink-700">
@@ -419,7 +506,8 @@ function ModifierEtapes({ p, modeles, onClose, onSave }: { p: ProjetDetail; mode
             )}
           </div>
         ))}
-        <Bouton onClick={() => setRows([...rows, { nom: "Nouvelle étape", description: "", part: "0", date_prevue: "", modeles: [], verrouillee: false }])}>
+        <datalist id="phases-projet">{phases.map((x) => <option key={x} value={x} />)}</datalist>
+        <Bouton onClick={() => setRows([...rows, { phase: rows[rows.length - 1]?.phase || "", nom: "Nouvelle étape", description: "", facturation: { ...REGLE_VIDE }, date_prevue: "", modeles: [], verrouillee: false }])}>
           <Plus size={12} /> Ajouter une étape
         </Bouton>
       </div>

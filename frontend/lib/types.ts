@@ -98,65 +98,6 @@ export type BilanResult = {
 };
 
 // ===================================================================
-// M4 — Commercialisation BRS
-// ===================================================================
-
-export type Decile = "D1" | "D2" | "D3" | "D4" | "D5" | "D6" | "D7" | "D8" | "D9" | "D10+";
-export type Verdict = "eligible" | "limite" | "non_eligible";
-export type Typologie = "T2" | "T3" | "T4";
-
-export type Menage = {
-  id: number;
-  scenario_id: number;
-  reference: string;
-  typologie_logement: Typologie;
-  nb_personnes: number;
-  nb_enfants: number;
-  revenu_fiscal_annuel: number;
-  apport: number;
-  prestations_sociales_mensuelles: number;
-  qualification?: QualificationResult | null;
-};
-
-export type EtapeCalcul = {
-  label: string;
-  valeur: number | string;
-  unite: string;
-  note: string;
-};
-
-export type QualificationResult = {
-  reference: string;
-  typologie: Typologie;
-  verdict: Verdict;
-  motifs: string[];
-  uc: number;
-  revenu_disponible_annuel: number;
-  revenu_disponible_mensuel: number;
-  revenu_par_uc_annuel: number;
-  decile: Decile;
-  decote_pct: number;
-  prix_vente_base: number;
-  prix_vente_apres_decote: number;
-  subvention_anru: number;
-  prix_net_a_financer: number;
-  apport: number;
-  capital_emprunte: number;
-  montant_ptz: number;
-  duree_ptz_ans: number;
-  mensualite_ptz: number;
-  montant_pc: number;
-  duree_pc_ans: number;
-  taux_pc_pct: number;
-  mensualite_pc: number;
-  mensualite_totale: number;
-  taux_effort_pct: number;
-  reste_a_vivre_mensuel: number;
-  reste_a_vivre_par_uc_jour: number;
-  etapes: EtapeCalcul[];
-};
-
-// ===================================================================
 // M3 — Exploitation locative
 // ===================================================================
 
@@ -215,18 +156,4 @@ export type ExploitationResult = {
   totaux: Record<string, number>;
   prets_detail: PretDetail[];
   alertes: Alerte[];
-};
-
-export type QualificationPreviewPayload = {
-  reference: string;
-  typologie_logement: Typologie;
-  composition: {
-    adultes: number;
-    enfants_moins_14: number;
-    enfants_14_plus: number;
-  };
-  revenu_activites_annuel: number;
-  revenus_patrimoine_annuel: number;
-  prestations_sociales_annuel: number;
-  apport: number;
 };

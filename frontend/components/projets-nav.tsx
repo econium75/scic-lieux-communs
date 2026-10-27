@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Briefcase, Receipt } from "lucide-react";
+import { Briefcase, ListChecks, Receipt } from "lucide-react";
 import { factures } from "@/lib/projets";
 import { getUser } from "@/lib/auth";
 import { cn } from "@/lib/format";
@@ -31,6 +31,7 @@ export function ProjetsNav({ dense = false }: { dense?: boolean }) {
 
   const liens = [
     { href: "/projets", label: "Suivi des projets", icon: Briefcase, badge: 0, alerte: false, titre: "" },
+    { href: "/projets/plans-action", label: "Plans d'action", icon: ListChecks, badge: 0, alerte: false, titre: "" },
     ...(role && role !== "lecture"
       ? [{ href: "/facturation", label: "Facturation", icon: Receipt, badge: badge.retard || badge.brouillons, alerte: badge.retard > 0,
            titre: badge.retard ? "Factures en retard de paiement" : "Factures à émettre" }]
@@ -41,7 +42,7 @@ export function ProjetsNav({ dense = false }: { dense?: boolean }) {
     <nav className="flex flex-col gap-0.5">
       <div className="text-[11px] tracking-widest text-ink-500 uppercase font-medium mb-1">Projets</div>
       {liens.map((l) => {
-        const actif = pathname === l.href || pathname.startsWith(`${l.href}/`);
+        const actif = pathname === l.href || (pathname.startsWith(`${l.href}/`) && !(l.href === "/projets" && pathname.startsWith("/projets/plans-action")));
         return (
           <Link
             key={l.href}

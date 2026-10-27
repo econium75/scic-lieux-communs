@@ -1,339 +1,255 @@
-"""Moteur M4 — Qualification ménage BRS.
+"""Commercialisation BRS — méthode du classeur « Simulation BRS » de la SCIC (octobre 2026).
 
-Reproduit la logique du Tableau de commercialisation 03.02.2026.xlsx et du
-fichier BRS AMENAGE CALCUL SUBVENTION MENAGES.xlsx auditée dans
-docs/audit-fichiers-sources.md.
+Un ménage :
+  1. composition → nombre de personnes et unités de consommation (1 + 0,5 par adulte supplémentaire ≥ 14 ans + 0,3 par enfant < 14 ans) ;
+  2. éligibilité : revenu fiscal de référence N-2 ≤ plafond de ressources BRS selon le nombre de personnes ;
+  3. tranche de déciles (cible de subvention) : revenu disponible par UC ≤ D4 → 3-4, ≤ D6 → 5-6, ≤ D9 → 7-9, sinon hors cible ;
+  4. logement : prix de vente BRS de la typologie, subvention selon la tranche, frais d'acquisition (sur le prix),
+     montant à emprunter = prix net + frais − apport ;
+  5. coût mensuel : mensualité (hors assurance), assurance emprunteur (sur capital), redevance foncière, charges, taxe foncière ;
+  6. solvabilité : taux d'effort bancaire (prêt + assurance + redevance + crédits en cours) / revenus nets ≤ taux maximal (HCSF),
+     reste à vivre par UC ≥ minimum ;
+  7. verdict : non éligible (ressources) / finançable / à retravailler.
 
-Pipeline :
-  1. UC (OECD modifiée) : 1er adulte=1, autre adulte=0,5, enfant<14=0,3, ≥14=0,5
-  2. Revenu disponible annuel = activités + patrimoine + prestations sociales
-  3. Revenu dispo / UC → classement dans un décile FiLoSoFi (table commune ou défaut Saint-Denis 2021)
-  4. Décote BRS par typologie et décile → prix de vente ajusté
-  5. Subvention ANRU par typologie et décile → prix net
-  6. Prix net - apport = capital à emprunter
-  7. Plan de financement : PTZ (durée Dptz, taux 0 %) + prêt complémentaire (durée Dpc, taux Tpc)
-  8. Mensualité totale = PMT(PTZ) + PMT(PC)
-  9. Taux d'effort = mensualité × 12 / revenu annuel
- 10. Reste à vivre par UC = (revenu annuel - mensualité × 12) / UC / 12 / 30 (jour)
- 11. Verdict : éligible / limite / non éligible selon seuils (33 % effort, 7 €/UC/jour reste)
+Écart volontaire avec le classeur : quand le plafond de ressources n'est pas saisi, le classeur affiche « NON »
+(la cellule vide vaut 0) ; ici le verdict est « à compléter ».
 
-Formules financières : numpy-financial (PMT, IPMT, PPMT, FV).
+Programme : répartition des logements de chaque typologie par tranche de déciles, subventions et prix nets totaux,
+quotités réelles comparées aux quotités cibles.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
-from typing import Literal, Optional
+import copy
 
-try:
-    import numpy_financial as npf
-except ImportError:  # fallback pur-python si npf absent
-    npf = None
-
-
-Typologie = Literal["T2", "T3", "T4"]
-Decile = Literal["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10+"]
-Verdict = Literal["eligible", "limite", "non_eligible"]
-
-
-# -----------------------------------------------------------------------------
-# Référentiels par défaut (Saint-Denis 2021 — audit DOHIS)
-# -----------------------------------------------------------------------------
-
-# Déciles de revenu disponible annuel € (par UC) — ensemble des ménages Saint-Denis 2021
-# Les bornes sont les PLAFONDS DU DÉCILE (inclusif)
-DECILES_SAINT_DENIS = [
-    ("D1", 7_970),
-    ("D2", 10_540),
-    ("D3", 12_610),
-    ("D4", 14_540),
-    ("D5", 16_620),   # médiane
-    ("D6", 18_980),
-    ("D7", 21_920),
-    ("D8", 25_920),
-    ("D9", 32_240),
-    # au-delà : D10+
-]
-
-# Table UC (OECD modifiée)
-UC_1ER_ADULTE = 1.0
-UC_AUTRE_ADULTE = 0.5
-UC_ENFANT_MOINS_14 = 0.3
-UC_ENFANT_14_PLUS = 0.5
-
-# Décote BRS par décile (en %) — valide tous typologies
-DECOTE_BY_DECILE_PCT = {
-    "D1": 15.0, "D2": 15.0, "D3": 15.0, "D4": 15.0,  # D3-4 = -15%
-    "D5": 8.0, "D6": 8.0,                             # D5-6 = -8%
-    "D7": 3.0, "D8": 3.0, "D9": 3.0, "D10+": 3.0,     # D7-9 = -3%
+TRANCHES = ("3-4", "5-6", "7-9")
+LIBELLE_TRANCHE = {"3-4": "Déciles 3-4", "5-6": "Déciles 5-6", "7-9": "Déciles 7-9", "hors": "Hors cible"}
+VERDICTS = {
+    "financable": "Finançable",
+    "a_retravailler": "À retravailler (apport, typologie, durée)",
+    "non_eligible": "Non éligible (ressources)",
+    "a_completer": "À compléter",
 }
 
-# Subvention ANRU moyenne par décile × typologie (€) — Orly audit
-SUBVENTION_ANRU_BY_DECILE_TYPO = {
-    "D1": {"T2": 27_100, "T3": 40_700, "T4": 48_700},
-    "D2": {"T2": 27_100, "T3": 40_700, "T4": 48_700},
-    "D3": {"T2": 27_100, "T3": 40_700, "T4": 48_700},
-    "D4": {"T2": 27_100, "T3": 40_700, "T4": 48_700},
-    "D5": {"T2": 14_500, "T3": 21_700, "T4": 26_000},
-    "D6": {"T2": 14_500, "T3": 21_700, "T4": 26_000},
-    "D7": {"T2": 5_500, "T3": 8_200, "T4": 9_600},
-    "D8": {"T2": 5_500, "T3": 8_200, "T4": 9_600},
-    "D9": {"T2": 5_500, "T3": 8_200, "T4": 9_600},
-    "D10+": {"T2": 0, "T3": 0, "T4": 0},  # au-delà, non éligible subvention
+HYPOTHESES_DEFAUT: dict = {
+    "typologies": [
+        {"code": "T2", "surface": 45, "prix_ttc": 181_000, "nb": 5,
+         "subventions": {"3-4": 27_100, "5-6": 14_500, "7-9": 5_500}, "repartition": {"3-4": 2, "5-6": 2, "7-9": 1}},
+        {"code": "T3", "surface": 65, "prix_ttc": 271_600, "nb": 6,
+         "subventions": {"3-4": 40_700, "5-6": 21_700, "7-9": 8_200}, "repartition": {"3-4": 2, "5-6": 2, "7-9": 2}},
+        {"code": "T4", "surface": 80, "prix_ttc": 325_000, "nb": 4,
+         "subventions": {"3-4": 48_700, "5-6": 26_000, "7-9": 9_600}, "repartition": {"3-4": 2, "5-6": 1, "7-9": 1}},
+    ],
+    "redevance_m2_mois": 1.5,
+    "charges_m2_mois": 2.5,
+    "taxe_fonciere_an": 600,
+    "taux_pret": 0.035,
+    "taux_assurance": 0.003,
+    "duree_ans": 25,
+    "frais_acquisition": 0.03,
+    "taux_effort_max": 0.35,
+    "reste_a_vivre_min_uc": 700,
+    # Revenu fiscal de référence N-2 maximal pour 1, 2, 3, 4, 5 personnes et plus.
+    "plafonds": {
+        "zone": "Zones A et A bis",
+        "source": "Plafonds PSLA 2026 (arrêté du 24 février 2026) — à vérifier pour le BRS et la zone de l'opération",
+        "montants": [38_844, 58_057, 76_105, 90_863, 108_107],
+    },
+    "deciles": {
+        "source": "Insee Filosofi 2021 — Saint-Denis",
+        "D3": 12_610, "D4": 14_540, "D5": 16_620, "D6": 18_980, "D7": 21_920, "D8": 25_920, "D9": 32_240,
+    },
+    "quotites_cibles": {"3-4": 0.30, "5-6": 0.40, "7-9": 0.30},
 }
 
-# Prix de vente de base BRS par typologie (€ TTC) — Orly audit
-PV_BASE_BY_TYPO = {
-    "T2": 181_000,
-    "T3": 271_600,
-    "T4": 325_000,
-}
 
-# Paramètres financement par défaut
-DUREE_PTZ_ANS_DEFAULT = 25
-TAUX_PTZ_PCT_DEFAULT = 0.0
-DUREE_PC_ANS_DEFAULT = 25
-TAUX_PC_PCT_DEFAULT = 3.80  # taux PLS courant 2026
-PART_PTZ_PCT_DEFAULT = 40.0  # 40 % PTZ, 60 % PC
-
-# Seuils de qualification
-TAUX_EFFORT_LIMITE_PCT = 30.0
-TAUX_EFFORT_MAX_PCT = 33.0
-RESTE_A_VIVRE_SEUIL_UC_JOUR = 7.0  # € / UC / jour
+def _num(v, defaut: float = 0.0) -> float:
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return defaut
 
 
-# -----------------------------------------------------------------------------
-# Entrée / sortie
-# -----------------------------------------------------------------------------
-
-@dataclass
-class CompositionFamille:
-    adultes: int = 1  # nombre total d'adultes (18+)
-    enfants_moins_14: int = 0
-    enfants_14_plus: int = 0
-
-
-@dataclass
-class MenageInput:
-    reference: str
-    typologie_logement: Typologie
-    composition: CompositionFamille
-    revenu_activites_annuel: float
-    revenus_patrimoine_annuel: float
-    prestations_sociales_annuel: float
-    apport: float
-    zone: str = "Saint-Denis"  # référence FiLoSoFi
-
-    # Overrides optionnels pour simulation financement
-    duree_ptz_ans: int = DUREE_PTZ_ANS_DEFAULT
-    taux_ptz_pct: float = TAUX_PTZ_PCT_DEFAULT
-    duree_pc_ans: int = DUREE_PC_ANS_DEFAULT
-    taux_pc_pct: float = TAUX_PC_PCT_DEFAULT
-    part_ptz_pct: float = PART_PTZ_PCT_DEFAULT
+def hypotheses(data: dict | None) -> dict:
+    """Hypothèses complètes : valeurs saisies, complétées par les valeurs par défaut."""
+    h = copy.deepcopy(HYPOTHESES_DEFAUT)
+    for k, v in (data or {}).items():
+        if k in ("plafonds", "deciles", "quotites_cibles") and isinstance(v, dict):
+            h[k] = {**h[k], **v}
+        elif v is not None:
+            h[k] = v
+    return h
 
 
-@dataclass
-class EtapeCalcul:
-    label: str
-    valeur: float | str
-    unite: str = ""
-    note: str = ""
-
-
-@dataclass
-class QualificationResult:
-    reference: str
-    typologie: Typologie
-    verdict: Verdict
-    motifs: list[str]
-
-    # Pipeline
-    uc: float
-    revenu_disponible_annuel: float
-    revenu_disponible_mensuel: float
-    revenu_par_uc_annuel: float
-    decile: Decile
-    decote_pct: float
-    prix_vente_base: float
-    prix_vente_apres_decote: float
-    subvention_anru: float
-    prix_net_a_financer: float
-    apport: float
-    capital_emprunte: float
-
-    montant_ptz: float
-    duree_ptz_ans: int
-    mensualite_ptz: float
-
-    montant_pc: float
-    duree_pc_ans: int
-    taux_pc_pct: float
-    mensualite_pc: float
-
-    mensualite_totale: float
-    taux_effort_pct: float
-    reste_a_vivre_mensuel: float
-    reste_a_vivre_par_uc_jour: float
-
-    etapes: list[EtapeCalcul]
-
-    def to_dict(self) -> dict:
-        return asdict(self)
-
-
-# -----------------------------------------------------------------------------
-# Fonctions pures
-# -----------------------------------------------------------------------------
-
-def calcul_uc(c: CompositionFamille) -> float:
-    """UC OECD modifiée."""
-    uc = UC_1ER_ADULTE
-    uc += max(0, c.adultes - 1) * UC_AUTRE_ADULTE
-    uc += c.enfants_moins_14 * UC_ENFANT_MOINS_14
-    uc += c.enfants_14_plus * UC_ENFANT_14_PLUS
-    return round(uc, 2)
-
-
-def classer_decile(revenu_par_uc_annuel: float, table=DECILES_SAINT_DENIS) -> Decile:
-    for name, plafond in table:
-        if revenu_par_uc_annuel <= plafond:
-            return name  # type: ignore[return-value]
-    return "D10+"
-
-
-def _pmt(montant: float, taux_annuel_pct: float, duree_ans: int) -> float:
-    """Mensualité de prêt amortissable (annuités constantes)."""
-    if duree_ans <= 0 or montant <= 0:
+def _pmt(taux_mensuel: float, n: int, capital: float) -> float:
+    if capital <= 0 or n <= 0:
         return 0.0
-    n = duree_ans * 12
-    if taux_annuel_pct == 0:
-        return montant / n
-    r = taux_annuel_pct / 100 / 12
-    if npf:
-        return float(-npf.pmt(r, n, montant))
-    # fallback pur Python
-    return montant * r / (1 - (1 + r) ** -n)
+    if taux_mensuel == 0:
+        return capital / n
+    return capital * taux_mensuel / (1 - (1 + taux_mensuel) ** -n)
 
 
-def calcul_qualification(inp: MenageInput) -> QualificationResult:
-    etapes: list[EtapeCalcul] = []
+def unites_consommation(adultes: int, enfants: int) -> float:
+    return 1 + 0.5 * max(adultes - 1, 0) + 0.3 * enfants
 
-    # 1. UC
-    uc = calcul_uc(inp.composition)
-    etapes.append(EtapeCalcul("UC OECD modifiée", uc, "UC",
-                              f"1 adulte={UC_1ER_ADULTE}, autre adulte={UC_AUTRE_ADULTE}, "
-                              f"<14 ans={UC_ENFANT_MOINS_14}, ≥14 ans={UC_ENFANT_14_PLUS}"))
 
-    # 2. Revenu disponible
-    revenu_an = inp.revenu_activites_annuel + inp.revenus_patrimoine_annuel + inp.prestations_sociales_annuel
-    etapes.append(EtapeCalcul("Revenu disponible annuel", revenu_an, "€",
-                              "activités + patrimoine + prestations sociales"))
+def plafond_ressources(h: dict, personnes: int) -> float | None:
+    montants = (h.get("plafonds") or {}).get("montants") or []
+    i = min(max(personnes, 1), 5) - 1
+    v = montants[i] if i < len(montants) else None
+    return float(v) if v not in (None, "") and _num(v) > 0 else None
 
-    revenu_par_uc = round(revenu_an / uc, 2) if uc else 0.0
-    etapes.append(EtapeCalcul("Revenu disponible par UC", revenu_par_uc, "€/an"))
 
-    # 3. Décile
-    decile = classer_decile(revenu_par_uc)
-    etapes.append(EtapeCalcul("Décile FiLoSoFi", decile, "",
-                              f"Table {inp.zone} 2021 (ensemble des ménages)"))
+def tranche(h: dict, revenu_par_uc: float) -> str:
+    d = h["deciles"]
+    if revenu_par_uc <= _num(d.get("D4")):
+        return "3-4"
+    if revenu_par_uc <= _num(d.get("D6")):
+        return "5-6"
+    if revenu_par_uc <= _num(d.get("D9")):
+        return "7-9"
+    return "hors"
 
-    # 4. Décote et prix après décote
-    decote_pct = DECOTE_BY_DECILE_PCT.get(decile, 0.0)
-    pv_base = PV_BASE_BY_TYPO.get(inp.typologie_logement, 0)
-    pv_apres_decote = pv_base * (1 - decote_pct / 100)
-    etapes.append(EtapeCalcul(f"PV base {inp.typologie_logement}", pv_base, "€"))
-    etapes.append(EtapeCalcul(f"Décote BRS décile {decile}", decote_pct, "%"))
-    etapes.append(EtapeCalcul("Prix de vente après décote", round(pv_apres_decote), "€"))
 
-    # 5. Subvention ANRU
-    subv = SUBVENTION_ANRU_BY_DECILE_TYPO.get(decile, {}).get(inp.typologie_logement, 0)
-    etapes.append(EtapeCalcul(f"Subvention ANRU ({decile}, {inp.typologie_logement})", subv, "€"))
+def typologie(h: dict, code: str) -> dict | None:
+    return next((t for t in h["typologies"] if t.get("code") == code), None)
 
-    # 6. Prix net
-    prix_net = pv_apres_decote - subv
-    etapes.append(EtapeCalcul("Prix net à financer", round(prix_net), "€"))
 
-    # 7. Capital emprunté
-    capital = max(0.0, prix_net - inp.apport)
-    etapes.append(EtapeCalcul("Apport personnel", inp.apport, "€"))
-    etapes.append(EtapeCalcul("Capital à emprunter", round(capital), "€"))
-
-    # 8. Plan de financement PTZ + PC
-    montant_ptz = capital * inp.part_ptz_pct / 100
-    montant_pc = capital - montant_ptz
-    mens_ptz = _pmt(montant_ptz, inp.taux_ptz_pct, inp.duree_ptz_ans)
-    mens_pc = _pmt(montant_pc, inp.taux_pc_pct, inp.duree_pc_ans)
-    mens_total = mens_ptz + mens_pc
-
-    etapes.append(EtapeCalcul(f"Montant PTZ ({inp.part_ptz_pct}% capital)", round(montant_ptz), "€",
-                              f"durée {inp.duree_ptz_ans} ans, taux {inp.taux_ptz_pct} %"))
-    etapes.append(EtapeCalcul("Mensualité PTZ", round(mens_ptz, 2), "€/mois"))
-    etapes.append(EtapeCalcul("Montant prêt complémentaire", round(montant_pc), "€",
-                              f"durée {inp.duree_pc_ans} ans, taux {inp.taux_pc_pct} %"))
-    etapes.append(EtapeCalcul("Mensualité prêt complémentaire", round(mens_pc, 2), "€/mois"))
-    etapes.append(EtapeCalcul("Mensualité totale", round(mens_total, 2), "€/mois"))
-
-    # 9. Taux d'effort
-    revenu_mensuel = revenu_an / 12
-    taux_effort = (mens_total * 12 / revenu_an * 100) if revenu_an else 0.0
-    etapes.append(EtapeCalcul("Taux d'effort", round(taux_effort, 2), "%",
-                              f"seuil limite {TAUX_EFFORT_LIMITE_PCT} %, max {TAUX_EFFORT_MAX_PCT} %"))
-
-    # 10. Reste à vivre
-    rav_mensuel = max(0.0, revenu_mensuel - mens_total)
-    rav_uc_jour = (rav_mensuel / uc / 30) if uc else 0.0
-    etapes.append(EtapeCalcul("Reste à vivre mensuel", round(rav_mensuel, 2), "€/mois"))
-    etapes.append(EtapeCalcul("Reste à vivre par UC et par jour", round(rav_uc_jour, 2), "€/UC/j",
-                              f"seuil minimal {RESTE_A_VIVRE_SEUIL_UC_JOUR} €/UC/j"))
-
-    # 11. Verdict
+def simuler_menage(h: dict, m: dict) -> dict:
+    """m : adultes, enfants (< 14 ans), rfr_n2, revenu_disponible_annuel, revenus_nets_mensuels,
+    credits_mensuels, apport, typologie."""
+    adultes = max(int(_num(m.get("adultes"), 1)), 1)
+    enfants = max(int(_num(m.get("enfants"))), 0)
+    rfr = _num(m.get("rfr_n2"))
+    rev_dispo = _num(m.get("revenu_disponible_annuel"))
+    nets = _num(m.get("revenus_nets_mensuels"))
+    credits = _num(m.get("credits_mensuels"))
+    apport = _num(m.get("apport"))
     motifs: list[str] = []
-    if taux_effort > TAUX_EFFORT_MAX_PCT:
-        motifs.append(f"Taux d'effort {taux_effort:.1f} % > seuil max {TAUX_EFFORT_MAX_PCT} %")
-    elif taux_effort > TAUX_EFFORT_LIMITE_PCT:
-        motifs.append(f"Taux d'effort {taux_effort:.1f} % entre {TAUX_EFFORT_LIMITE_PCT} et {TAUX_EFFORT_MAX_PCT} %")
-    if rav_uc_jour < RESTE_A_VIVRE_SEUIL_UC_JOUR:
-        motifs.append(f"Reste à vivre {rav_uc_jour:.1f} €/UC/j < seuil {RESTE_A_VIVRE_SEUIL_UC_JOUR} €")
-    if decile == "D10+":
-        motifs.append("Revenus > plafond D9 — non éligible BRS")
-    if capital == 0:
-        motifs.append("Apport suffisant, pas d'emprunt nécessaire")
 
-    if decile == "D10+" or taux_effort > TAUX_EFFORT_MAX_PCT or rav_uc_jour < RESTE_A_VIVRE_SEUIL_UC_JOUR:
-        verdict: Verdict = "non_eligible"
-    elif taux_effort > TAUX_EFFORT_LIMITE_PCT or rav_uc_jour < RESTE_A_VIVRE_SEUIL_UC_JOUR * 1.3:
-        verdict = "limite"
+    personnes = adultes + enfants
+    uc = unites_consommation(adultes, enfants)
+    plafond = plafond_ressources(h, personnes)
+    eligible = None if plafond is None else rfr <= plafond
+    rev_uc = rev_dispo / uc
+    tr = tranche(h, rev_uc)
+
+    t = typologie(h, m.get("typologie") or "") or (h["typologies"][0] if h["typologies"] else
+                                                     {"code": "?", "surface": 0, "prix_ttc": 0, "subventions": {}})
+    surface, prix = _num(t.get("surface")), _num(t.get("prix_ttc"))
+    subvention = 0.0 if tr == "hors" else _num((t.get("subventions") or {}).get(tr))
+    prix_net = prix - subvention
+    frais = prix * _num(h["frais_acquisition"])
+    emprunt = max(prix_net + frais - apport, 0.0)
+
+    mensualite = _pmt(_num(h["taux_pret"]) / 12, int(_num(h["duree_ans"]) * 12), emprunt)
+    assurance = emprunt * _num(h["taux_assurance"]) / 12
+    redevance = surface * _num(h["redevance_m2_mois"])
+    charges = surface * _num(h["charges_m2_mois"])
+    taxe = _num(h["taxe_fonciere_an"]) / 12
+    cout = mensualite + assurance + redevance + charges + taxe
+
+    effort = (mensualite + assurance + redevance + credits) / nets if nets > 0 else None
+    effort_max = _num(h["taux_effort_max"])
+    rav = nets - cout - credits
+    rav_uc = rav / uc
+    rav_min = _num(h["reste_a_vivre_min_uc"])
+
+    if eligible is False:
+        verdict = "non_eligible"
+        motifs.append(f"Revenu fiscal de référence au-dessus du plafond pour {personnes} personne{'s' if personnes > 1 else ''}")
+    elif eligible is None:
+        verdict = "a_completer"
+        motifs.append("Plafond de ressources à saisir dans les hypothèses : éligibilité non vérifiée")
+    elif effort is None:
+        verdict = "a_completer"
+        motifs.append("Revenus nets mensuels à saisir pour calculer le taux d'effort")
+    elif effort <= effort_max and rav_uc >= rav_min:
+        verdict = "financable"
     else:
-        verdict = "eligible"
-        if not motifs:
-            motifs.append("Taux d'effort et reste à vivre dans les cibles")
+        verdict = "a_retravailler"
+    if effort is not None and effort > effort_max:
+        motifs.append(f"Taux d'effort {effort * 100:.1f} % au-dessus du maximum de {effort_max * 100:.0f} %")
+    if nets > 0 and rav_uc < rav_min:
+        motifs.append(f"Reste à vivre de {rav_uc:,.0f} € par UC et par mois, sous le minimum de {rav_min:,.0f} €".replace(",", " "))
+    if tr == "hors":
+        motifs.append("Revenu disponible par UC au-dessus du 9e décile : hors cible de subvention")
 
-    return QualificationResult(
-        reference=inp.reference,
-        typologie=inp.typologie_logement,
-        verdict=verdict,
-        motifs=motifs,
-        uc=uc,
-        revenu_disponible_annuel=round(revenu_an, 2),
-        revenu_disponible_mensuel=round(revenu_mensuel, 2),
-        revenu_par_uc_annuel=revenu_par_uc,
-        decile=decile,
-        decote_pct=decote_pct,
-        prix_vente_base=float(pv_base),
-        prix_vente_apres_decote=round(pv_apres_decote, 2),
-        subvention_anru=float(subv),
-        prix_net_a_financer=round(prix_net, 2),
-        apport=float(inp.apport),
-        capital_emprunte=round(capital, 2),
-        montant_ptz=round(montant_ptz, 2),
-        duree_ptz_ans=inp.duree_ptz_ans,
-        mensualite_ptz=round(mens_ptz, 2),
-        montant_pc=round(montant_pc, 2),
-        duree_pc_ans=inp.duree_pc_ans,
-        taux_pc_pct=inp.taux_pc_pct,
-        mensualite_pc=round(mens_pc, 2),
-        mensualite_totale=round(mens_total, 2),
-        taux_effort_pct=round(taux_effort, 2),
-        reste_a_vivre_mensuel=round(rav_mensuel, 2),
-        reste_a_vivre_par_uc_jour=round(rav_uc_jour, 2),
-        etapes=etapes,
-    )
+    etapes = [
+        ("Composition", "Nombre de personnes", personnes, ""),
+        ("Composition", "Unités de consommation", round(uc, 2), "UC"),
+        ("Éligibilité", "Plafond de ressources applicable", plafond, "€"),
+        ("Éligibilité", "Éligible au BRS", "Plafond à saisir" if eligible is None else ("OUI" if eligible else "NON"), ""),
+        ("Éligibilité", "Revenu disponible par UC", round(rev_uc, 2), "€/an"),
+        ("Éligibilité", "Tranche de déciles", LIBELLE_TRANCHE[tr], ""),
+        ("Logement", f"Surface habitable {t.get('code')}", surface, "m²"),
+        ("Logement", "Prix de vente BRS", prix, "€"),
+        ("Logement", "Subvention ménage", subvention, "€"),
+        ("Logement", "Prix net après subvention", prix_net, "€"),
+        ("Logement", "Frais d'acquisition", round(frais, 2), "€"),
+        ("Logement", "Montant à emprunter", round(emprunt, 2), "€"),
+        ("Coût mensuel", "Mensualité de prêt (hors assurance)", round(mensualite, 2), "€/mois"),
+        ("Coût mensuel", "Assurance emprunteur", round(assurance, 2), "€/mois"),
+        ("Coût mensuel", "Redevance foncière (OFS)", round(redevance, 2), "€/mois"),
+        ("Coût mensuel", "Charges de copropriété", round(charges, 2), "€/mois"),
+        ("Coût mensuel", "Taxe foncière (mensualisée)", round(taxe, 2), "€/mois"),
+        ("Coût mensuel", "Coût mensuel total du logement", round(cout, 2), "€/mois"),
+        ("Solvabilité", "Taux d'effort bancaire", None if effort is None else round(effort, 4), "%"),
+        ("Solvabilité", "Taux d'effort maximal", effort_max, "%"),
+        ("Solvabilité", "Reste à vivre", round(rav, 2), "€/mois"),
+        ("Solvabilité", "Reste à vivre par UC", round(rav_uc, 2), "€/mois"),
+    ]
+    return {
+        "reference": m.get("reference") or "",
+        "typologie": t.get("code"),
+        "personnes": personnes, "uc": round(uc, 4),
+        "plafond": plafond, "eligible": eligible,
+        "revenu_par_uc": round(rev_uc, 2), "tranche": tr, "tranche_libelle": LIBELLE_TRANCHE[tr],
+        "surface": surface, "prix": prix, "subvention": subvention, "prix_net": prix_net,
+        "frais": round(frais, 2), "emprunt": round(emprunt, 2),
+        "mensualite": round(mensualite, 2), "assurance": round(assurance, 2), "redevance": round(redevance, 2),
+        "charges": round(charges, 2), "taxe_fonciere": round(taxe, 2), "cout_mensuel": round(cout, 2),
+        "taux_effort": None if effort is None else round(effort, 4), "taux_effort_max": effort_max,
+        "reste_a_vivre": round(rav, 2), "reste_a_vivre_uc": round(rav_uc, 2), "reste_a_vivre_min_uc": rav_min,
+        "verdict": verdict, "verdict_libelle": VERDICTS[verdict], "motifs": motifs,
+        "etapes": [{"section": s, "label": l, "valeur": v, "unite": u} for s, l, v, u in etapes],
+    }
+
+
+def programme(h: dict) -> dict:
+    """Répartition des subventions par tranche de déciles (onglet « Programme & subventions »)."""
+    lignes = []
+    tot = {"nb": 0, "subvention": 0.0, "prix_brut": 0.0, "prix_net": 0.0, **{k: 0 for k in TRANCHES}}
+    for t in h["typologies"]:
+        nb = int(_num(t.get("nb")))
+        rep = {k: int(_num((t.get("repartition") or {}).get(k))) for k in TRANCHES}
+        ecart = sum(rep.values()) - nb
+        subv = sum(rep[k] * _num((t.get("subventions") or {}).get(k)) for k in TRANCHES)
+        brut = nb * _num(t.get("prix_ttc"))
+        lignes.append({"code": t.get("code"), "nb": nb, "repartition": rep, "ecart": ecart,
+                       "controle": "OK" if ecart == 0 else f"Écart {ecart:+d}",
+                       "subvention": subv, "prix_brut": brut, "prix_net": brut - subv})
+        tot["nb"] += nb
+        tot["subvention"] += subv
+        tot["prix_brut"] += brut
+        tot["prix_net"] += brut - subv
+        for k in TRANCHES:
+            tot[k] += rep[k]
+    reelles = {k: (tot[k] / tot["nb"] if tot["nb"] else 0.0) for k in TRANCHES}
+    return {
+        "lignes": lignes, "total": tot,
+        "quotites_reelles": reelles, "quotites_cibles": {k: _num(h["quotites_cibles"].get(k)) for k in TRANCHES},
+        "subvention_moyenne": tot["subvention"] / tot["nb"] if tot["nb"] else 0.0,
+        "coherent": all(l["ecart"] == 0 for l in lignes),
+    }
+
+
+def couverture(h: dict, resultats: list[dict]) -> list[dict]:
+    """Logements prévus par typologie et tranche, face aux candidats finançables."""
+    out = []
+    for t in h["typologies"]:
+        for k in TRANCHES:
+            prevus = int(_num((t.get("repartition") or {}).get(k)))
+            candidats = [r for r in resultats if r["typologie"] == t.get("code") and r["tranche"] == k]
+            out.append({"typologie": t.get("code"), "tranche": k, "prevus": prevus, "candidats": len(candidats),
+                        "financables": sum(1 for r in candidats if r["verdict"] == "financable")})
+    return out

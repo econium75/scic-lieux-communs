@@ -4,13 +4,11 @@ from fastapi.responses import StreamingResponse
 from sqlmodel import Session, select
 
 from ..db import get_session
-from ..models import Scenario, Menage, AuditLog
+from ..models import Scenario, AuditLog
 from ..engines.bilan import calcul_bilan_operation, BilanInput, LigneSaisie, Vente, SubventionGlobale
 from ..engines.exploitation import calcul_exploitation, ExploitationInput, Pret, Composant
-from ..engines.commercialisation import calcul_qualification, MenageInput, CompositionFamille
 from ..excel.bilan_recap import build_bilan_recap
 from ..excel.exploitation_pls import build_exploitation_pls
-from ..excel.commercialisation import build_commercialisation
 from ..excel.pdf_synthese import build_pdf_synthese
 
 router = APIRouter()
@@ -104,39 +102,6 @@ def export_exploitation_xlsx(scenario_id: int, session: Session = Depends(get_se
     return _xlsx_response(buf, f"exploitation_{exploit['operation_code']}.xlsx")
 
 
-@router.get("/commercialisation/{scenario_id}.xlsx")
-def export_commercialisation_xlsx(scenario_id: int, session: Session = Depends(get_session)):
-    sc = session.get(Scenario, scenario_id)
-    if not sc:
-        raise HTTPException(404, "Scénario introuvable")
-
-    menages = session.exec(select(Menage).where(Menage.scenario_id == scenario_id)).all()
-    rows = []
-    for m in menages:
-        adultes = max(1, m.nb_personnes - m.nb_enfants)
-        comp = CompositionFamille(
-            adultes=adultes,
-            enfants_moins_14=m.nb_enfants,
-            enfants_14_plus=0,
-        )
-        inp = MenageInput(
-            reference=m.reference,
-            typologie_logement=m.typologie_logement,
-            composition=comp,
-            revenu_activites_annuel=m.revenu_fiscal_annuel,
-            revenus_patrimoine_annuel=0.0,
-            prestations_sociales_annuel=m.prestations_sociales_mensuelles * 12,
-            apport=m.apport,
-        )
-        qual = calcul_qualification(inp).to_dict()
-        rows.append({"menage": m.model_dump(), "qualification": qual})
-    buf = build_commercialisation(rows)
-    session.add(AuditLog(action="export_commercialisation_xlsx", target_type="scenario", target_id=scenario_id,
-                        payload={"nb_menages": len(rows)}))
-    session.commit()
-    return _xlsx_response(buf, f"commercialisation_{sc.operation.code}.xlsx")
-
-
 @router.get("/synthese/{scenario_id}.pdf")
 def export_synthese_pdf(scenario_id: int, session: Session = Depends(get_session)):
     sc = session.get(Scenario, scenario_id)
@@ -157,7 +122,7 @@ def export_operation_zip(operation_id: int, session: Session = Depends(get_sessi
     from io import BytesIO
     from ..models import Operation, Attachment, Menage
     from ..excel.commercialisation import build_commercialisation
-    from ..engines.commercialisation import calcul_qualification, MenageInput, CompositionFamille
+    from .brs import etat as etat_brs
     from ..config import settings as _s
 
     op = session.get(Operation, operation_id)
@@ -181,7 +146,7 @@ def export_operation_zip(operation_id: int, session: Session = Depends(get_sessi
             f"Contenu :\n"
             f"- scenarios/<id>_<nom>/bilan.xlsx — bilan M2\n"
             f"- scenarios/<id>_<nom>/exploitation.xlsx — exploitation M3 (si configurée)\n"
-            f"- scenarios/<id>_<nom>/commercialisation.xlsx — ménages M4\n"
+            f"- scenarios/<id>_<nom>/commercialisation_brs.xlsx — hypothèses, ménages candidats, programme et subventions BRS\n"
             f"- scenarios/<id>_<nom>/synthese.pdf — PDF de synthèse comité d'engagement\n"
             f"- pieces_jointes/ — toutes les pièces jointes de l'opération et ses phases\n"
         )
@@ -200,23 +165,12 @@ def export_operation_zip(operation_id: int, session: Session = Depends(get_sessi
                     zf.writestr(f"{folder}/exploitation.xlsx", build_exploitation_pls(exploit).getvalue())
             except Exception as e:
                 zf.writestr(f"{folder}/exploitation_ERREUR.txt", f"{e}")
-            # Commercialisation
+            # Commercialisation BRS
             try:
-                menages = list(session.exec(select(Menage).where(Menage.scenario_id == sc.id)).all())
-                if menages:
-                    rows = []
-                    for m in menages:
-                        adultes = max(1, m.nb_personnes - m.nb_enfants)
-                        comp = CompositionFamille(adultes=adultes, enfants_moins_14=m.nb_enfants, enfants_14_plus=0)
-                        inp = MenageInput(
-                            reference=m.reference, typologie_logement=m.typologie_logement,
-                            composition=comp, revenu_activites_annuel=m.revenu_fiscal_annuel,
-                            revenus_patrimoine_annuel=0.0,
-                            prestations_sociales_annuel=m.prestations_sociales_mensuelles * 12,
-                            apport=m.apport,
-                        )
-                        rows.append({"menage": m.model_dump(), "qualification": calcul_qualification(inp).to_dict()})
-                    zf.writestr(f"{folder}/commercialisation.xlsx", build_commercialisation(rows).getvalue())
+                if session.exec(select(Menage).where(Menage.scenario_id == sc.id)).first():
+                    e = etat_brs(session, sc.id)
+                    zf.writestr(f"{folder}/commercialisation_brs.xlsx", build_commercialisation(
+                        e["hypotheses"], [x["resultat"] for x in e["menages"]], e["programme"], op.nom).getvalue())
             except Exception as e:
                 zf.writestr(f"{folder}/commercialisation_ERREUR.txt", f"{e}")
             # PDF synthèse

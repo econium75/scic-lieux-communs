@@ -7,7 +7,6 @@ from .db import init_db
 from .routers import (
     operations,
     scenarios,
-    menages,
     referentiels,
     calculs,
     exports,
@@ -18,7 +17,6 @@ from .routers import (
     phases,
     agenda,
     notifications,
-    briefing,
     attachments,
     imports,
     simulations,
@@ -28,6 +26,7 @@ from .routers import (
     accueil,
     projets,
     factures,
+    brs,
 )
 
 
@@ -39,6 +38,7 @@ async def lifespan(app: FastAPI):
     simulations.seed_simulations()
     projet.seed_planning()
     projets.seed_modeles()
+    projets.seed_parcours()
     # Seed users
     from .db import engine
     from sqlmodel import Session
@@ -71,7 +71,6 @@ app.include_router(auth_router.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(referentiels.router, prefix="/api/referentiels", tags=["M1 Référentiels"])
 app.include_router(operations.router, prefix="/api/operations", tags=["Opérations"])
 app.include_router(calculs.router, prefix="/api/calculs", tags=["Moteurs M2/M3/M4"])
-app.include_router(menages.router, prefix="/api/menages", tags=["M4 Ménages"])
 app.include_router(scenarios.router, prefix="/api/scenarios", tags=["M5 Scénarios"])
 app.include_router(exports.router, prefix="/api/exports", tags=["M6 Exports"])
 app.include_router(audit.router, prefix="/api/audit", tags=["M7 Audit"])
@@ -80,7 +79,6 @@ app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(phases.router, prefix="/api/phases", tags=["Phases"])
 app.include_router(agenda.router, prefix="/api/agenda", tags=["Agenda"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
-app.include_router(briefing.router, prefix="/api/briefing", tags=["Briefing podcast"])
 app.include_router(attachments.router, prefix="/api/attachments", tags=["Pièces jointes"])
 app.include_router(imports.router, prefix="/api/imports", tags=["Imports batch"])
 app.include_router(simulations.router, prefix="/api/simulations", tags=["Simulateur 8 onglets"])
@@ -90,6 +88,7 @@ app.include_router(projet.router, prefix="/api/projet", tags=["Suivi des opérat
 app.include_router(accueil.router, prefix="/api/accueil", tags=["Ma journée"])
 app.include_router(projets.router, prefix="/api/projets", tags=["Suivi des projets"])
 app.include_router(factures.router, prefix="/api/factures", tags=["Facturation"])
+app.include_router(brs.router, prefix="/api/brs", tags=["Commercialisation BRS"])
 
 
 @app.get("/api/health")

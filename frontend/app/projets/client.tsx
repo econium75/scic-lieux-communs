@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Briefcase, Plus, Settings2, X } from "lucide-react";
+import { Briefcase, ListChecks, Plus, Settings2, X } from "lucide-react";
 import { Bouton, Modal, champ, etiquette } from "@/components/collab/modal";
 import { collab, type Membre } from "@/lib/collab";
 import { api } from "@/lib/api";
@@ -67,10 +67,13 @@ export function ProjetsClient() {
           </div>
           <h1 className="font-serif text-2xl lg:text-3xl text-ink-900 mt-1">Suivi des projets</h1>
           <p className="text-sm text-ink-500 mt-1">
-            Chaque projet suit un parcours d'étapes ; une étape terminée prépare sa facture, et les contrats se génèrent depuis les modèles.
+            Chaque projet suit le parcours de la SCIC en trois phases ; une étape terminée prépare sa facture, et les conventions et contrats se génèrent depuis les modèles.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href="/projets/plans-action" className="text-xs px-3 py-1.5 rounded-sm border border-paper-200 bg-white hover:bg-paper-50 inline-flex items-center gap-1.5 text-ink-700">
+            <ListChecks size={13} /> Plans d'action
+          </Link>
           {role === "admin" && (
             <Link href="/projets/parametrage" className="text-xs px-3 py-1.5 rounded-sm border border-paper-200 bg-white hover:bg-paper-50 inline-flex items-center gap-1.5 text-ink-700">
               <Settings2 size={13} /> Parcours et modèles
@@ -139,7 +142,10 @@ export function ProjetsClient() {
                 </td>
                 <td className="px-4 py-3 text-ink-700">{p.client_nom || <span className="text-ink-300">—</span>}</td>
                 <td className="px-4 py-3 text-ink-700">{p.responsable_nom}</td>
-                <td className="px-4 py-3 text-ink-700">{p.etape_en_cours || (p.nb_etapes && p.nb_etapes === p.nb_etapes_terminees ? "Toutes terminées" : "—")}</td>
+                <td className="px-4 py-3 text-ink-700">
+                  {p.etape_en_cours || (p.nb_etapes && p.nb_etapes === p.nb_etapes_terminees ? "Toutes terminées" : "—")}
+                  {p.phase_en_cours && <div className="text-[11px] text-ink-500">{p.phase_en_cours}</div>}
+                </td>
                 <td className="px-4 py-3 w-44">
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 flex-1 bg-paper-100 rounded-full overflow-hidden">
@@ -174,10 +180,12 @@ function Tuile({ label, value, sub, accent }: { label: string; value: string; su
   );
 }
 
+const nombre = (v: string) => Number(String(v).replace(/\s/g, "").replace(",", ".")) || 0;
+
 export function NouveauProjet({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [f, setF] = useState({ nom: "", client_nom: "", client_adresse: "", client_siren: "", client_contact: "", client_email: "",
-    operation_id: "", responsable: getUser()?.username || "", montant_ht: "", taux_tva: "0.2" });
+    operation_id: "", responsable: getUser()?.username || "", ca: "", taux_honoraires: "3", taux_tva: "0.2", collectivite: "", promoteur: "" });
   const [membres, setMembres] = useState<Membre[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
   const [err, setErr] = useState<string | null>(null);
@@ -196,7 +204,11 @@ export function NouveauProjet({ onClose }: { onClose: () => void }) {
         nom: f.nom, client_nom: f.client_nom, client_adresse: f.client_adresse, client_siren: f.client_siren,
         client_contact: f.client_contact, client_email: f.client_email, responsable: f.responsable,
         operation_id: f.operation_id ? Number(f.operation_id) : null,
-        montant_ht: Number(String(f.montant_ht).replace(/\s/g, "").replace(",", ".")) || 0, taux_tva: Number(f.taux_tva),
+        ca_previsionnel_ttc: nombre(f.ca), taux_honoraires: nombre(f.taux_honoraires) / 100, taux_tva: Number(f.taux_tva),
+        tiers: {
+          ...(f.collectivite.trim() ? { collectivite: { nom: f.collectivite.trim(), adresse: "", siren: "", contact: "", email: "" } } : {}),
+          ...(f.promoteur.trim() ? { promoteur: { nom: f.promoteur.trim(), adresse: "", siren: "", contact: "", email: "" } } : {}),
+        },
       });
       router.push(`/projets/${p.id}`);
     } catch (e) {
@@ -206,6 +218,7 @@ export function NouveauProjet({ onClose }: { onClose: () => void }) {
   };
 
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
+  const honoraires = nombre(f.ca) * nombre(f.taux_honoraires) / 100;
 
   return (
     <Modal
@@ -245,8 +258,21 @@ export function NouveauProjet({ onClose }: { onClose: () => void }) {
           <input id="np-email" className={champ} type="email" value={f.client_email} onChange={set("client_email")} />
         </div>
         <div>
-          <label className={etiquette} htmlFor="np-montant">Honoraires HT (€)</label>
-          <input id="np-montant" className={champ} inputMode="decimal" value={f.montant_ht} onChange={set("montant_ht")} placeholder="0" />
+          <label className={etiquette} htmlFor="np-collectivite">Collectivité (diagnostic, convention d'objectifs)</label>
+          <input id="np-collectivite" className={champ} value={f.collectivite} onChange={set("collectivite")} placeholder="ex. Ville d'Orly" />
+        </div>
+        <div>
+          <label className={etiquette} htmlFor="np-promoteur">Promoteur ou bailleur (si connu)</label>
+          <input id="np-promoteur" className={champ} value={f.promoteur} onChange={set("promoteur")} />
+        </div>
+        <div>
+          <label className={etiquette} htmlFor="np-ca">Chiffre d'affaires prévisionnel TTC (€)</label>
+          <input id="np-ca" className={champ} inputMode="decimal" value={f.ca} onChange={set("ca")} placeholder="prix de vente total de l'opération" />
+        </div>
+        <div>
+          <label className={etiquette} htmlFor="np-taux">Contrat d'honoraires (% du prix de vente TTC)</label>
+          <input id="np-taux" className={champ} inputMode="decimal" value={f.taux_honoraires} onChange={set("taux_honoraires")} />
+          {honoraires > 0 && <div className="text-[11px] text-ink-500 mt-1">Honoraires : {euros(honoraires)} HT</div>}
         </div>
         <div>
           <label className={etiquette} htmlFor="np-tva">TVA</label>
@@ -271,7 +297,7 @@ export function NouveauProjet({ onClose }: { onClose: () => void }) {
           </select>
         </div>
       </div>
-      <p className="text-xs text-ink-500 mt-4">Le projet reprend le parcours type des étapes ; vous pourrez l'adapter ensuite.</p>
+      <p className="text-xs text-ink-500 mt-4">Le projet reprend le parcours type de la SCIC (trois phases, facturation par étape) ; vous pourrez l'adapter ensuite.</p>
       {err && <div className="mt-3 text-sm text-danger-500">{err}</div>}
     </Modal>
   );

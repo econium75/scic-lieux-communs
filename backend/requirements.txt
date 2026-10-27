@@ -13,4 +13,3 @@ pypdfium2>=4.30
 python-multipart==0.0.12
 python-jose[cryptography]>=3.3.0
 bcrypt>=4.0.0
-gTTS>=2.5.1

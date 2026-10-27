@@ -46,7 +46,6 @@ Livré :
 | **Suivi projet par phases** (S7) | ✅ | 8 phases (Incubation → Clôture), timeline horizontale sur la synthèse, statut hover-éditable, notif responsable |
 | **Agenda partagé** (S7) | ✅ | Page `/agenda` : création d'événements (COPIL/COPROJ/jalon/rdv/deadline), participants, notif auto, groupage par jour |
 | **Notifications in-app** (S7) | ✅ | Bell dans sidebar avec badge non-lu, popover 20 dernières, marquer-lu, polling 30 s |
-| **Briefing podcast quotidien** (S7) | ✅ | Génération auto texte (événements + notifs + phases + activité) → MP3 gTTS FR, player HTML5, historique 14 jours |
 | **Cloud internet** (S7) | ✅ | [railway.json](railway.json), [render.yaml](render.yaml), guide [deploy/CLOUD_DEPLOY.md](deploy/CLOUD_DEPLOY.md) — Railway (5 min) / Scaleway Paris / VPS |
 | **Pièces jointes** (S8) | ✅ | Attachables à opération/phase/event/scénario, 50 Mo max, upload drag-and-drop, panel sur page synthèse |
 | **Import Excel ménages** (S8) | ✅ | Batch depuis page Commercialisation, gabarit téléchargeable, rapport d'import avec erreurs |
@@ -60,7 +59,6 @@ Livré :
 | Upload Excel UI | ⏸ V2 | Endpoint backend prêt, UI frontend à ajouter |
 | Pages RGPD UI | ⏸ V2 | Endpoint registre dispo, page UI à ajouter |
 | Vue calendrier mensuelle (jour/semaine/mois) | ⏸ V2 | Vue liste par jour en place ; grille mensuelle à ajouter |
-| Briefing programmé automatique (cron 7h quotidien) | ⏸ V2 | Génération manuelle en place ; cron à ajouter |
 
 ### Constat métier critique — confirmé par M2 ET M3
 

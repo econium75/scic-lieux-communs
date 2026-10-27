@@ -1,14 +1,11 @@
-"""Endpoints de calcul : exposent les moteurs M2 et M4 (M3 à venir session 3)."""
+"""Endpoints de calcul : exposent les moteurs M2 (bilan) et M3 (exploitation). La commercialisation BRS est dans routers/brs.py."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
 from ..db import get_session
-from ..models import Scenario, Menage, AuditLog
+from ..models import Scenario, AuditLog
 from ..engines.bilan import (
     calcul_bilan_operation, BilanInput, LigneSaisie, Vente, SubventionGlobale,
-)
-from ..engines.commercialisation import (
-    calcul_qualification, MenageInput, CompositionFamille,
 )
 from ..engines.exploitation import (
     calcul_exploitation, ExploitationInput, Pret, Composant,
@@ -56,68 +53,6 @@ def calculer_bilan(scenario_id: int, session: Session = Depends(get_session)) ->
     ))
     session.commit()
     return result.to_dict()
-
-
-@router.post("/commercialisation/{menage_id}")
-def calculer_commercialisation(menage_id: int, session: Session = Depends(get_session)) -> dict:
-    """M4 — qualification du ménage pour accession BRS."""
-    menage = session.get(Menage, menage_id)
-    if not menage:
-        raise HTTPException(404, "Ménage introuvable")
-
-    # On reconstruit la composition à partir des champs plats + éventuellement
-    # un dict composition stocké dans qualification.input (voir ci-dessous).
-    comp_dict = (menage.qualification or {}).get("input_composition") if menage.qualification else None
-    if comp_dict:
-        composition = CompositionFamille(**comp_dict)
-    else:
-        # fallback approximatif à partir des champs plats
-        adultes = max(1, menage.nb_personnes - menage.nb_enfants)
-        composition = CompositionFamille(
-            adultes=adultes,
-            enfants_moins_14=menage.nb_enfants,  # simplification
-            enfants_14_plus=0,
-        )
-
-    revenu_an = menage.revenu_fiscal_annuel
-    prestations_an = menage.prestations_sociales_mensuelles * 12
-
-    inp = MenageInput(
-        reference=menage.reference,
-        typologie_logement=menage.typologie_logement,  # type: ignore[arg-type]
-        composition=composition,
-        revenu_activites_annuel=revenu_an,
-        revenus_patrimoine_annuel=0.0,
-        prestations_sociales_annuel=prestations_an,
-        apport=menage.apport,
-    )
-    result = calcul_qualification(inp)
-    menage.qualification = result.to_dict()
-    session.add(menage)
-    session.add(AuditLog(
-        action="calcul_commercialisation",
-        target_type="menage",
-        target_id=menage_id,
-        payload={"verdict": result.verdict, "decile": result.decile, "taux_effort": result.taux_effort_pct},
-    ))
-    session.commit()
-    return result.to_dict()
-
-
-@router.post("/commercialisation/preview")
-def preview_commercialisation(payload: dict) -> dict:
-    """M4 — simulation ad-hoc sans persister (prévisualisation UI)."""
-    comp = CompositionFamille(**payload.get("composition", {}))
-    inp = MenageInput(
-        reference=payload.get("reference", "preview"),
-        typologie_logement=payload.get("typologie_logement", "T3"),
-        composition=comp,
-        revenu_activites_annuel=float(payload.get("revenu_activites_annuel", 0)),
-        revenus_patrimoine_annuel=float(payload.get("revenus_patrimoine_annuel", 0)),
-        prestations_sociales_annuel=float(payload.get("prestations_sociales_annuel", 0)),
-        apport=float(payload.get("apport", 0)),
-    )
-    return calcul_qualification(inp).to_dict()
 
 
 @router.post("/exploitation/{scenario_id}")

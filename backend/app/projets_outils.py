@@ -33,20 +33,146 @@ IDENTITE_DEFAUT = {
                    "40 € (art. L.441-10 et D.441-5 du Code de commerce). Pas d'escompte pour paiement anticipé."),
 }
 
-# Parcours provisoire, en attente des étapes définies par la SCIC (modifiable par l'administrateur).
+# Qui paie une étape facturée, et sur quelle base se calcule un pourcentage.
+PAYEURS = {"client": "Client ou bénéficiaire", "collectivite": "Collectivité", "promoteur": "Promoteur ou bailleur", "financeur": "Financeur"}
+BASES = {"honoraires": "des honoraires", "ca_ttc": "du CA prévisionnel TTC"}
+
+PHASE_1 = "Identification et qualification des prospects"
+PHASE_2 = "Incubation"
+PHASE_3 = "Phase opérationnelle"
+
+
+def _etape(phase: str, nom: str, description: str = "", facturation: dict | None = None, modeles: tuple = ()) -> dict:
+    return {"phase": phase, "nom": nom, "description": description, "facturation": facturation or {"mode": "aucune"}, "modeles": list(modeles)}
+
+
+# Parcours type transmis par la SCIC (document « Suivi des projets », octobre 2026) ; modifiable par l'administrateur.
 PARCOURS_DEFAUT = {
-    "provisoire": True,
+    "provisoire": False,
     "etapes": [
-        {"nom": "Cadrage et signature de la convention", "description": "Rencontre, définition du besoin, signature de la convention.",
-         "part": 0.20, "modeles": ["Convention d'accompagnement"]},
-        {"nom": "Études de faisabilité", "description": "Analyse du site, du programme et des contraintes.", "part": 0.20, "modeles": []},
-        {"nom": "Montage et financement", "description": "Montage juridique et financier, dossiers de financement.", "part": 0.20, "modeles": []},
-        {"nom": "Suivi des travaux", "description": "Accompagnement pendant le chantier.", "part": 0.25, "modeles": []},
-        {"nom": "Livraison et clôture", "description": "Réception, livraison et bilan de la mission.", "part": 0.15, "modeles": []},
+        _etape(PHASE_1, "Diagnostic", "Diagnostic mené avec les collectivités.",
+               {"mode": "forfait", "montant": 15_000, "payeur": "collectivite"}),
+        _etape(PHASE_1, "Mobilisation des associations locales"),
+        _etape(PHASE_1, "Étude de faisabilité", "Dont bilan d'opération et bilan d'exploitation (montage financier dans Téo)."),
+        _etape(PHASE_1, "Convention d'objectifs", "Signature avec la ville et les autres parties prenantes ; choix éventuel du promoteur ou du bailleur.",
+               modeles=("Convention d'objectifs",)),
+        _etape(PHASE_1, "Financement de la phase d'incubation", "60 k€ apportés par la CNAV.",
+               {"mode": "forfait", "montant": 60_000, "payeur": "financeur", "nature": "financement"}),
+        _etape(PHASE_1, "Facturation au promoteur", "0,5 % du chiffre d'affaires prévisionnel TTC, payé par le promoteur.",
+               {"mode": "pourcentage", "taux": 0.005, "base": "ca_ttc", "payeur": "promoteur"}),
+        _etape(PHASE_2, "Communication", "Réunion publique avec un élu."),
+        _etape(PHASE_2, "Mobilisation habitante"),
+        _etape(PHASE_2, "Analyse des candidatures et suivi de la commercialisation", "Simulation des ménages dans « Commercialisation BRS »."),
+        _etape(PHASE_2, "Consultation promoteur", "Si le promoteur n'est pas identifié ou en l'absence de bailleur."),
+        _etape(PHASE_2, "Contrat d'honoraires", "3 % du prix de vente TTC (taux réglé sur le projet).", modeles=("Contrat d'honoraires",)),
+        _etape(PHASE_2, "Choix de l'architecte"),
+        _etape(PHASE_3, "Ateliers participatifs : projet de vie partagée"),
+        _etape(PHASE_3, "Ateliers participatifs : programme"),
+        _etape(PHASE_3, "Esquisse et permis de construire", "10 % des honoraires facturés à l'obtention du permis de construire.",
+               {"mode": "pourcentage", "taux": 0.10, "base": "honoraires", "payeur": "promoteur"}),
+        _etape(PHASE_3, "Dossiers de demande de financement"),
+        _etape(PHASE_3, "Signature de l'acte authentique de vente"),
     ],
 }
 
+# Plans d'action de la SCIC et modélisation de la foncière (même document) ; modifiables dans Téo.
+PLANS_ACTION_DEFAUT = {
+    "actions": [
+        {"axe": "Portage", "titre": "Portage des béguinages"},
+        {"axe": "Portage", "titre": "Portage de coopératives de logements"},
+        {"axe": "Portage", "titre": "SCIAPP"},
+        {"axe": "Gestion", "titre": "Trouver un gestionnaire externe", "detail": "Sur une durée : bail emphytéotique, convention…"},
+        {"axe": "Gestion", "titre": "Proposition de gestion pour tiers avec La Bruyère"},
+        {"axe": "Gestion", "titre": "Proposition SNL"},
+        {"axe": "Foncière", "titre": "Modélisation de la foncière", "detail": "Opérations à lancer sur les 5 prochaines années (15 % de fonds propres)."},
+        {"axe": "Foncière", "titre": "Modéliser / prendre rendez-vous avec Jean-Louis Marie"},
+        {"axe": "Financement", "titre": "Définir le type de financement et les investisseurs"},
+        {"axe": "Financement", "titre": "Voir la CDC et la chargée de mission de France Active", "detail": "Pistes : fonds de pension, family funds."},
+        {"axe": "Projets", "titre": "Programme mixte à Aubervilliers"},
+    ],
+    "fonciere": {
+        "taux_fonds_propres": 0.15,
+        "cout_moyen_logement": 0,
+        "annees": [
+            {"annee": 2027, "idf_projets": 1, "idf_logements": 16, "idf_detail": "Habitat partagé (Orly : 16 logements)", "hors_idf_projets": 2, "hors_idf_logements": 0},
+            {"annee": 2028, "idf_projets": 2, "idf_logements": 50, "idf_detail": "Corbeil et Melun", "hors_idf_projets": 2, "hors_idf_logements": 0},
+            {"annee": 2029, "idf_projets": 3, "idf_logements": 0, "idf_detail": "3 projets par an", "hors_idf_projets": 3, "hors_idf_logements": 0},
+            {"annee": 2030, "idf_projets": 3, "idf_logements": 0, "idf_detail": "3 projets par an", "hors_idf_projets": 3, "hors_idf_logements": 0},
+            {"annee": 2031, "idf_projets": 3, "idf_logements": 0, "idf_detail": "3 projets par an", "hors_idf_projets": 3, "hors_idf_logements": 0},
+        ],
+    },
+}
+
 MODELES_DEFAUT = [
+    {
+        "titre": "Convention d'objectifs",
+        "categorie": "convention",
+        "contenu": """# Convention d'objectifs
+## {{projet.nom}}
+
+Entre :
+
+**{{collectivite.nom}}**, {{collectivite.adresse}}, représentée par {{collectivite.contact}}, ci-après « la Collectivité »,
+
+**{{scic.raison_sociale}}**, {{scic.forme}}, dont le siège est situé {{scic.adresse}}, SIRET {{scic.siret}}, représentée par {{scic.representant}}, ci-après « la SCIC »,
+
+et les autres parties prenantes désignées en annexe.
+
+## Article 1 — Objet
+La présente convention fixe les objectifs partagés du projet « {{projet.nom}} »{{operation.mention}} et les engagements des parties jusqu'au choix du promoteur ou du bailleur.
+
+## Article 2 — Objectifs
+[À compléter : programme visé (nombre de logements, habitat partagé, bail réel solidaire…), publics, calendrier.]
+
+## Article 3 — Engagements de la SCIC
+La SCIC conduit le diagnostic, mobilise les associations locales et les futurs habitants, réalise l'étude de faisabilité (bilan d'opération et bilan d'exploitation) et accompagne le choix du promoteur ou du bailleur.
+
+## Article 4 — Engagements de la Collectivité
+[À compléter : foncier, accompagnement des démarches, communication auprès des habitants.]
+
+## Article 5 — Financement et facturation
+La phase d'incubation est financée par {{financeur.nom}}. Le diagnostic est facturé à la Collectivité et le promoteur retenu verse à la SCIC 0,5 % du chiffre d'affaires prévisionnel TTC de l'opération, selon l'échéancier suivant :
+
+{{echeancier}}
+
+## Article 6 — Durée
+La convention prend effet à sa signature et s'achève avec la phase d'incubation.
+
+Fait en autant d'exemplaires que de parties, le {{date.jour}}.
+
+{{signatures:collectivite}}
+""",
+    },
+    {
+        "titre": "Contrat d'honoraires",
+        "categorie": "contrat",
+        "contenu": """# Contrat d'honoraires
+## {{projet.nom}} — {{projet.code}}
+
+Entre **{{scic.raison_sociale}}**, {{scic.forme}}, {{scic.adresse}}, SIRET {{scic.siret}}, représentée par {{scic.representant}}, ci-après « la SCIC »,
+
+et **{{promoteur.nom}}**, {{promoteur.adresse}}, SIREN {{promoteur.siren}}, représenté par {{promoteur.contact}}, ci-après « le Promoteur ».
+
+## Article 1 — Objet
+Le Promoteur confie à la SCIC l'accompagnement du projet « {{projet.nom}} »{{operation.mention}} : mobilisation des futurs habitants, ateliers participatifs sur le projet de vie partagée et sur le programme, suivi de la commercialisation et des dossiers de financement.
+
+## Article 2 — Honoraires
+Les honoraires sont fixés à {{honoraires.taux}} du prix de vente TTC de l'opération, estimé à {{projet.ca_ttc}}, soit {{honoraires.ht}} HT ({{honoraires.ttc}} TTC, TVA {{honoraires.taux_tva}}).
+
+## Article 3 — Échéancier de facturation
+{{echeancier}}
+
+## Article 4 — Paiement
+Les factures sont payables à {{scic.delai_paiement}} jours.
+
+## Article 5 — Clauses générales
+[À compléter par la SCIC : résiliation, révision du prix de vente, règlement des litiges.]
+
+Fait en deux exemplaires, le {{date.jour}}.
+
+{{signatures:promoteur}}
+""",
+    },
     {
         "titre": "Convention d'accompagnement",
         "categorie": "convention",
@@ -123,11 +249,17 @@ CHAMPS = [
     ("operation.nom", "Opération liée"), ("operation.commune", "Commune de l'opération"),
     ("operation.mention", "« , dans le cadre de l'opération … » (vide si aucune)"),
     ("honoraires.ht", "Honoraires HT"), ("honoraires.tva", "Montant de la TVA"), ("honoraires.ttc", "Honoraires TTC"),
-    ("honoraires.taux_tva", "Taux de TVA"),
+    ("honoraires.taux_tva", "Taux de TVA"), ("honoraires.taux", "Taux du contrat d'honoraires (part du prix de vente TTC)"),
+    ("projet.ca_ttc", "Chiffre d'affaires prévisionnel TTC (prix de vente total)"),
+    ("collectivite.nom", "Collectivité"), ("collectivite.adresse", "Adresse de la collectivité"), ("collectivite.contact", "Signataire pour la collectivité"),
+    ("promoteur.nom", "Promoteur ou bailleur"), ("promoteur.adresse", "Adresse du promoteur"), ("promoteur.siren", "SIREN du promoteur"),
+    ("promoteur.contact", "Signataire pour le promoteur"), ("financeur.nom", "Financeur de la phase d'incubation"),
     ("etape.nom", "Étape (si le document est généré pour une étape)"), ("etape.montant_ht", "Montant HT de l'étape"),
     ("date.jour", "Date du jour"),
     ("echeancier", "Tableau des étapes et de la facturation (sur une ligne seule)"),
-    ("signatures", "Cadres de signature (sur une ligne seule)"),
+    ("signatures", "Cadres de signature SCIC et client (sur une ligne seule)"),
+    ("signatures:collectivite", "Cadres de signature SCIC et collectivité (sur une ligne seule)"),
+    ("signatures:promoteur", "Cadres de signature SCIC et promoteur (sur une ligne seule)"),
 ]
 
 BLEU, ENCRE, GRIS, TRAIT, PAPIER = (colors.HexColor("#121A2B"), colors.HexColor("#121826"), colors.HexColor("#667085"),
@@ -156,6 +288,56 @@ def fusion(defaut: dict, data: dict | None) -> dict:
     return {**defaut, **{k: v for k, v in (data or {}).items() if v is not None}}
 
 
+def _f(v) -> float:
+    try:
+        return float(v or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def regle(e: dict) -> dict:
+    """Règle de facturation d'une étape. Les étapes créées avant octobre 2026 n'ont qu'une part des honoraires."""
+    r = e.get("facturation")
+    if not isinstance(r, dict):
+        part = _f(e.get("part"))
+        return {"mode": "pourcentage" if part else "aucune", "montant": 0.0, "taux": part, "base": "honoraires",
+                "payeur": "client", "nature": "facture"}
+    return {"mode": r.get("mode") if r.get("mode") in ("aucune", "forfait", "pourcentage") else "aucune",
+            "montant": max(_f(r.get("montant")), 0.0), "taux": max(_f(r.get("taux")), 0.0),
+            "base": r.get("base") if r.get("base") in BASES else "honoraires",
+            "payeur": r.get("payeur") if r.get("payeur") in PAYEURS else "client",
+            "nature": "financement" if r.get("nature") == "financement" else "facture"}
+
+
+def montant_etape(projet, e: dict) -> float:
+    r = regle(e)
+    if r["mode"] == "forfait":
+        return round(r["montant"], 2)
+    if r["mode"] == "pourcentage":
+        base = _f(projet.ca_previsionnel_ttc) if r["base"] == "ca_ttc" else _f(projet.montant_ht)
+        return round(base * r["taux"], 2)
+    return 0.0
+
+
+def libelle_regle(r: dict) -> str:
+    if r["mode"] == "forfait":
+        texte = "Forfait"
+    elif r["mode"] == "pourcentage":
+        texte = f"{pct(r['taux'])} {BASES[r['base']]}"
+    else:
+        return "—"
+    return texte + (" · financement" if r["nature"] == "financement" else "")
+
+
+def tiers(projet, payeur: str) -> dict[str, str]:
+    """Coordonnées de celui qui paie : le client du projet, ou la collectivité, le promoteur, le financeur saisis sur le projet."""
+    if payeur == "client":
+        return {"nom": projet.client_nom or "", "adresse": projet.client_adresse or "", "siren": projet.client_siren or "",
+                "contact": projet.client_contact or "", "email": projet.client_email or ""}
+    t = (projet.tiers or {}).get(payeur) or {}
+    return {k: str(t.get(k) or "") for k in ("nom", "adresse", "siren", "contact", "email")}
+
+
 # ─────────────────────────────────────────────── champs et remplissage
 def valeurs_champs(projet, identite: dict, operation=None, responsable_nom: str = "", etape: dict | None = None) -> dict[str, str]:
     ht = float(projet.montant_ht or 0)
@@ -172,11 +354,20 @@ def valeurs_champs(projet, identite: dict, operation=None, responsable_nom: str 
         "operation.nom": operation.nom if operation else "", "operation.commune": operation.commune if operation else "",
         "operation.mention": f", dans le cadre de l'opération « {operation.nom} » ({operation.commune})" if operation else "",
         "honoraires.ht": eur(ht), "honoraires.tva": eur(tva), "honoraires.ttc": eur(ht + tva),
-        "honoraires.taux_tva": pct(float(projet.taux_tva or 0)),
+        "honoraires.taux_tva": pct(float(projet.taux_tva or 0)), "honoraires.taux": pct(_f(projet.taux_honoraires)),
+        "projet.ca_ttc": eur(_f(projet.ca_previsionnel_ttc)) if _f(projet.ca_previsionnel_ttc) else "[CA prévisionnel TTC]",
         "etape.nom": (etape or {}).get("nom", ""),
-        "etape.montant_ht": eur(ht * float((etape or {}).get("part") or 0)) if etape else "",
+        "etape.montant_ht": eur(montant_etape(projet, etape)) if etape else "",
         "date.jour": date_fr(date.today()),
     }
+    for qui, defaut_nom, defaut_adresse in (("collectivite", "[collectivité]", "[adresse de la collectivité]"),
+                                            ("promoteur", "[promoteur]", "[adresse du promoteur]"),
+                                            ("financeur", "[financeur]", "[adresse du financeur]")):
+        t = tiers(projet, qui)
+        v[f"{qui}.nom"] = t["nom"] or defaut_nom
+        v[f"{qui}.adresse"] = t["adresse"] or defaut_adresse
+        v[f"{qui}.siren"] = t["siren"] or "[SIREN]"
+        v[f"{qui}.contact"] = t["contact"] or "[signataire]"
     return v
 
 
@@ -211,29 +402,38 @@ def _inline(t: str) -> str:
 
 
 def _table_echeancier(projet, st) -> Table:
-    ht = float(projet.montant_ht or 0)
-    rows = [[Paragraph(x, st["cellb"]) for x in ("Étape", "Part", "Montant HT", "Échéance prévue")]]
+    rows = [[Paragraph(x, st["cellb"]) for x in ("Étape", "Facturation", "Payeur", "Montant HT", "Échéance prévue")]]
+    style = [("BACKGROUND", (0, 0), (-1, 0), BLEU), ("GRID", (0, 0), (-1, -1), 0.4, TRAIT), ("VALIGN", (0, 0), (-1, -1), "TOP"),
+             ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4)]
+    phase, total = None, 0.0
     for i, e in enumerate(projet.etapes or [], 1):
-        part = float(e.get("part") or 0)
-        rows.append([Paragraph(_inline(f"{i}. {e.get('nom', '')}"), st["cell"]), Paragraph(pct(part), st["droite"]),
-                     Paragraph(eur(ht * part), st["droite"]), Paragraph(date_fr(e.get("date_prevue")) or "—", st["cell"])])
-    rows.append([Paragraph("<b>Total</b>", st["cell"]), Paragraph(f"<b>{pct(sum(float(e.get('part') or 0) for e in projet.etapes or []))}</b>", st["droite"]),
-                 Paragraph(f"<b>{eur(ht * sum(float(e.get('part') or 0) for e in projet.etapes or []))}</b>", st["droite"]), ""])
+        if e.get("phase") and e["phase"] != phase:
+            phase = e["phase"]
+            rows.append([Paragraph(f"<b>{_inline(phase)}</b>", st["cell"]), "", "", "", ""])
+            style += [("SPAN", (0, len(rows) - 1), (-1, len(rows) - 1)), ("BACKGROUND", (0, len(rows) - 1), (-1, len(rows) - 1), PAPIER)]
+        r = regle(e)
+        montant = montant_etape(projet, e)
+        if r["mode"] != "aucune" and r["nature"] == "facture":
+            total += montant
+        rows.append([Paragraph(_inline(f"{i}. {e.get('nom', '')}"), st["cell"]), Paragraph(_inline(libelle_regle(r)), st["cell"]),
+                     Paragraph(_inline(PAYEURS[r["payeur"]] if r["mode"] != "aucune" else "—"), st["cell"]),
+                     Paragraph(eur(montant) if r["mode"] != "aucune" else "—", st["droite"]),
+                     Paragraph(date_fr(e.get("date_prevue")) or "—", st["cell"])])
+    rows.append([Paragraph("<b>Total facturé par la SCIC</b>", st["cell"]), "", "", Paragraph(f"<b>{eur(total)}</b>", st["droite"]), ""])
+    style += [("BACKGROUND", (0, len(rows) - 1), (-1, len(rows) - 1), PAPIER)]
     L = A4[0] - 4 * cm
-    return Table(rows, colWidths=[L * 0.52, L * 0.12, L * 0.18, L * 0.18], repeatRows=1, style=[
-        ("BACKGROUND", (0, 0), (-1, 0), BLEU), ("GRID", (0, 0), (-1, -1), 0.4, TRAIT), ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("BACKGROUND", (0, -1), (-1, -1), PAPIER), ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4)],
-        spaceBefore=4, spaceAfter=8)
+    return Table(rows, colWidths=[L * 0.36, L * 0.2, L * 0.16, L * 0.14, L * 0.14], repeatRows=1, style=style, spaceBefore=4, spaceAfter=8)
 
 
-def _table_signatures(identite: dict, projet, st) -> KeepTogether:
+def _table_signatures(identite: dict, projet, st, qui: str = "client") -> KeepTogether:
     L = A4[0] - 4 * cm
+    t = tiers(projet, qui)
 
     def bloc(titre, qui):
         return [Paragraph(f"<b>{_inline(titre)}</b>", st["cell"]), Paragraph(_inline(qui), st["petit"]),
                 Paragraph("Date et signature", st["petit"]), Spacer(1, 2.4 * cm)]
     t = Table([[bloc(f"Pour {identite['raison_sociale']}", identite["representant"]),
-                bloc(f"Pour {projet.client_nom or '[client]'}", projet.client_contact or "[signataire]")]],
+                bloc(f"Pour {t['nom'] or '[' + PAYEURS[qui].lower() + ']'}", t["contact"] or "[signataire]")]],
               colWidths=[L / 2, L / 2], style=[("BOX", (0, 0), (0, 0), 0.6, TRAIT), ("BOX", (1, 0), (1, 0), 0.6, TRAIT),
                                                 ("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 8),
                                                 ("TOPPADDING", (0, 0), (-1, -1), 6)])
@@ -275,9 +475,9 @@ def document_pdf(titre: str, texte: str, projet, identite: dict) -> bytes:
         elif ligne == "{{echeancier}}":
             vider()
             h.append(_table_echeancier(projet, st))
-        elif ligne == "{{signatures}}":
+        elif ligne in ("{{signatures}}", "{{signatures:collectivite}}", "{{signatures:promoteur}}", "{{signatures:financeur}}"):
             vider()
-            h.append(_table_signatures(identite, projet, st))
+            h.append(_table_signatures(identite, projet, st, ligne[13:-2] or "client"))
         elif ligne.startswith("## "):
             vider()
             h.append(Paragraph(_inline(ligne[3:]), st["h2"]))

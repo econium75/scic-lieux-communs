@@ -12,6 +12,14 @@ engine = create_engine(
 # Colonnes ajoutées après coup à des tables existantes : create_all ne les crée pas sur une base déjà en place.
 COLONNES_AJOUTEES = [
     ("phase", "date_debut", "DATETIME"),
+    ("menage", "adultes", "INTEGER DEFAULT 1"),
+    ("menage", "revenu_disponible_annuel", "FLOAT DEFAULT 0"),
+    ("menage", "revenus_nets_mensuels", "FLOAT DEFAULT 0"),
+    ("menage", "credits_mensuels", "FLOAT DEFAULT 0"),
+    ("menage", "notes", "VARCHAR DEFAULT ''"),
+    ("projet", "ca_previsionnel_ttc", "FLOAT DEFAULT 0"),
+    ("projet", "taux_honoraires", "FLOAT DEFAULT 0.03"),
+    ("projet", "tiers", "JSON"),
 ]
 
 

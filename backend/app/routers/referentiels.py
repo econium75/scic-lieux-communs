@@ -49,7 +49,7 @@ def _ensure_defaults(session: Session) -> None:
 
 
 # Paramètres gérés par leurs propres écrans (suivi des projets, facturation) : absents de la page « Barèmes & paramètres »
-REFERENTIELS_INTERNES = {"identite_scic", "parcours_projet"}
+REFERENTIELS_INTERNES = {"identite_scic", "parcours_projet", "plans_action"}
 
 
 @router.get("")

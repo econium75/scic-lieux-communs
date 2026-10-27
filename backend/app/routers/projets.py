@@ -38,13 +38,25 @@ def parcours(session: Session) -> dict:
     return _ref(session, "parcours_projet", "Parcours type des projets", outils.PARCOURS_DEFAUT).data
 
 
+def seed_parcours() -> None:
+    """Le parcours provisoire (jamais enregistré par un administrateur) est remplacé par le parcours transmis par la SCIC."""
+    from ..db import engine
+    with Session(engine) as session:
+        r = session.exec(select(Referentiel).where(Referentiel.code == "parcours_projet")).first()
+        if r and (r.data or {}).get("provisoire"):
+            r.data = outils.PARCOURS_DEFAUT
+            r.updated_at = datetime.now(timezone.utc)
+            session.add(r)
+            session.commit()
+
+
 def seed_modeles() -> None:
     from ..db import engine
     with Session(engine) as session:
-        if session.exec(select(ModeleDocument)).first():
-            return
+        existants = set(session.exec(select(ModeleDocument.titre)).all())
         for m in outils.MODELES_DEFAUT:
-            session.add(ModeleDocument(titre=m["titre"], categorie=m["categorie"], contenu=m["contenu"], updated_by="system"))
+            if m["titre"] not in existants:
+                session.add(ModeleDocument(titre=m["titre"], categorie=m["categorie"], contenu=m["contenu"], updated_by="system"))
         session.commit()
 
 
@@ -81,12 +93,16 @@ def vue(session: Session, p: Projet, detail: bool = False) -> dict:
     noms = _noms(session)
     factures = list(session.exec(select(Facture).where(Facture.projet_id == p.id)).all())
     par_etape = _factures_par_etape(session, p.id)
-    ht = float(p.montant_ht or 0)
     etapes = []
     for e in p.etapes or []:
         f = par_etape.get(e["id"])
-        etapes.append({**e, "montant_ht": round(ht * float(e.get("part") or 0), 2),
+        r = outils.regle(e)
+        etapes.append({**e, "phase": e.get("phase") or "", "facturation": r, "montant_ht": outils.montant_etape(p, e),
+                       "regle_libelle": outils.libelle_regle(r), "payeur_nom": outils.tiers(p, r["payeur"])["nom"],
                        "facture": {"id": f.id, "numero": f.numero, "statut": f.statut, "total_ttc": f.total_ttc} if f else None})
+    facturables = [e for e in etapes if e["facturation"]["mode"] != "aucune" and e["facturation"]["nature"] == "facture"]
+    financements = [{"etape_id": e["id"], "nom": e["nom"], "montant": e["montant_ht"], "financeur": e["payeur_nom"], "obtenu": e["statut"] == "terminee"}
+                    for e in etapes if e["facturation"]["mode"] != "aucune" and e["facturation"]["nature"] == "financement"]
     # facturé = factures émises ou payées ; une facture annulée par un avoir n'est plus comptée
     facture_ht = sum(f.total_ht for f in factures if f.type == "facture" and f.statut in ("emise", "payee"))
     paye_ttc = sum(f.total_ttc for f in factures if f.statut == "payee")
@@ -97,12 +113,18 @@ def vue(session: Session, p: Projet, detail: bool = False) -> dict:
         "etapes": etapes,
         "responsable_nom": noms.get(p.responsable, p.responsable),
         "operation_nom": op.nom if op else None,
-        "avancement": round(sum(float(e.get("part") or 0) for e in etapes if e["statut"] == "terminee") * 100) if etapes else 0,
+        "avancement": round(nb_term * 100 / len(etapes)) if etapes else 0,
         "nb_etapes": len(etapes), "nb_etapes_terminees": nb_term,
         "etape_en_cours": next((e["nom"] for e in etapes if e["statut"] == "en_cours"), None),
-        "somme_parts": round(sum(float(e.get("part") or 0) for e in etapes), 6),
+        "phase_en_cours": next((e["phase"] for e in etapes if e["statut"] == "en_cours"), None),
+        "total_facturable_ht": round(sum(e["montant_ht"] for e in facturables), 2),
+        # part des honoraires du contrat déjà répartie sur des étapes (le reste n'a pas encore d'échéance)
+        "part_honoraires_planifiee": round(sum(e["facturation"]["taux"] for e in facturables
+                                               if e["facturation"]["mode"] == "pourcentage" and e["facturation"]["base"] == "honoraires"), 6),
+        "financements": financements,
         "facture_ht": round(facture_ht, 2), "paye_ttc": round(paye_ttc, 2),
-        "reste_a_facturer_ht": round(max(0.0, ht - facture_ht), 2),
+        "reste_a_facturer_ht": round(max(0.0, sum(e["montant_ht"] for e in facturables) - facture_ht), 2),
+        "tiers": {k: outils.tiers(p, k) for k in ("collectivite", "promoteur", "financeur")},
         "nb_brouillons": sum(1 for f in factures if f.statut == "brouillon"),
     }
     if detail:
@@ -133,8 +155,8 @@ def _etapes_depuis_parcours(session: Session) -> list[dict]:
     titres = {m.titre: m.id for m in session.exec(select(ModeleDocument).where(ModeleDocument.actif == True)).all()}  # noqa: E712
     out = []
     for i, e in enumerate(parcours(session).get("etapes", [])):
-        out.append({"id": uuid4().hex[:8], "nom": e.get("nom", f"Étape {i + 1}"), "description": e.get("description", ""),
-                    "part": float(e.get("part") or 0), "statut": "en_cours" if i == 0 else "a_venir",
+        out.append({"id": uuid4().hex[:8], "phase": e.get("phase", ""), "nom": e.get("nom", f"Étape {i + 1}"), "description": e.get("description", ""),
+                    "facturation": outils.regle(e), "statut": "en_cours" if i == 0 else "a_venir",
                     "date_prevue": None, "date_realisation": None,
                     "modeles": [titres[t] for t in e.get("modeles", []) if t in titres]})
     return out
@@ -146,19 +168,48 @@ def _normaliser_etapes(etapes: list[dict], anciennes: list[dict]) -> list[dict]:
     for e in etapes:
         if not str(e.get("nom", "")).strip():
             raise HTTPException(422, "Chaque étape doit avoir un nom")
-        part = float(e.get("part") or 0)
-        if part < 0 or part > 1:
-            raise HTTPException(422, "La part de facturation d'une étape doit être comprise entre 0 et 100 %")
+        regle = _regle_valide(e)
         ancienne = precedentes.get(e.get("id") or "", {})
         statut = e.get("statut") or ancienne.get("statut") or "a_venir"
         if statut not in STATUTS_ETAPE:
             raise HTTPException(422, f"Statut d'étape inconnu : {statut}")
-        out.append({"id": e.get("id") or uuid4().hex[:8], "nom": str(e["nom"]).strip()[:200], "description": str(e.get("description", ""))[:1000],
-                    "part": part, "statut": statut, "date_prevue": e.get("date_prevue") or None,
+        out.append({"id": e.get("id") or uuid4().hex[:8], "phase": str(e.get("phase") or "")[:120], "nom": str(e["nom"]).strip()[:200],
+                    "description": str(e.get("description", ""))[:1000], "facturation": regle, "statut": statut, "date_prevue": e.get("date_prevue") or None,
                     "date_realisation": ancienne.get("date_realisation") if statut == "terminee" else None,
                     "modeles": [int(x) for x in e.get("modeles", []) if str(x).isdigit()]})
-    if sum(e["part"] for e in out) > 1.000001:
-        raise HTTPException(422, "Le total des parts de facturation dépasse 100 %")
+    _controle_honoraires(out)
+    return out
+
+
+def _regle_valide(e: dict) -> dict:
+    brute = e.get("facturation")
+    if isinstance(brute, dict) and brute.get("mode") not in (None, "aucune", "forfait", "pourcentage"):
+        raise HTTPException(422, f"Mode de facturation inconnu : {brute.get('mode')}")
+    r = outils.regle(e)
+    if r["mode"] == "pourcentage" and not 0 < r["taux"] <= 1:
+        raise HTTPException(422, f"Étape « {e.get('nom', '')} » : le pourcentage doit être compris entre 0 et 100 %")
+    return r
+
+
+def _controle_honoraires(etapes: list[dict]) -> None:
+    part = sum(e["facturation"]["taux"] for e in etapes if e["facturation"]["mode"] == "pourcentage"
+               and e["facturation"]["base"] == "honoraires" and e["facturation"]["nature"] == "facture")
+    if part > 1.000001:
+        raise HTTPException(422, "Les étapes facturent plus de 100 % des honoraires")
+
+
+def _honoraires(p: Projet) -> None:
+    """Quand le chiffre d'affaires prévisionnel est connu, les honoraires suivent le taux du contrat."""
+    if float(p.ca_previsionnel_ttc or 0) > 0:
+        p.montant_ht = round(float(p.ca_previsionnel_ttc) * float(p.taux_honoraires or 0), 2)
+
+
+def _tiers_valides(tiers: dict | None) -> dict:
+    out = {}
+    for k, v in (tiers or {}).items():
+        if k not in ("collectivite", "promoteur", "financeur"):
+            raise HTTPException(422, f"Partie inconnue : {k}")
+        out[k] = {c: str((v or {}).get(c) or "").strip()[:300] for c in ("nom", "adresse", "siren", "contact", "email")}
     return out
 
 
@@ -174,6 +225,9 @@ class ProjetBody(BaseModel):
     responsable: str | None = None
     montant_ht: float | None = None
     taux_tva: float | None = None
+    ca_previsionnel_ttc: float | None = None
+    taux_honoraires: float | None = None
+    tiers: dict | None = None
     statut: str | None = None
     date_debut: date | None = None
     notes: str | None = None
@@ -192,10 +246,13 @@ def creer(body: ProjetBody, session: Session = Depends(get_session), user: User 
         raise HTTPException(422, "Le nom du projet est obligatoire")
     p = Projet(code=_nouveau_code(session), nom=body.nom.strip()[:200], cree_par=user.username,
                responsable=body.responsable or user.username, date_debut=body.date_debut or date.today())
-    for k in ("client_nom", "client_adresse", "client_siren", "client_contact", "client_email", "operation_id", "montant_ht", "taux_tva", "notes"):
+    for k in ("client_nom", "client_adresse", "client_siren", "client_contact", "client_email", "operation_id", "montant_ht", "taux_tva",
+              "ca_previsionnel_ttc", "taux_honoraires", "notes"):
         v = getattr(body, k)
         if v is not None:
             setattr(p, k, v)
+    p.tiers = _tiers_valides(body.tiers)
+    _honoraires(p)
     p.etapes = _normaliser_etapes(body.etapes, []) if body.etapes else _etapes_depuis_parcours(session)
     session.add(p)
     session.commit()
@@ -211,7 +268,8 @@ def creer(body: ProjetBody, session: Session = Depends(get_session), user: User 
 @router.get("/parcours")
 def lire_parcours(session: Session = Depends(get_session), user: User | None = Depends(get_current_user)) -> dict:
     _auth(user)
-    return parcours(session)
+    data = parcours(session)
+    return {**data, "etapes": [{**e, "phase": e.get("phase", ""), "facturation": outils.regle(e)} for e in data.get("etapes", [])]}
 
 
 class ParcoursBody(BaseModel):
@@ -225,10 +283,9 @@ def enregistrer_parcours(body: ParcoursBody, session: Session = Depends(get_sess
     for e in body.etapes:
         if not str(e.get("nom", "")).strip():
             raise HTTPException(422, "Chaque étape doit avoir un nom")
-        etapes.append({"nom": str(e["nom"]).strip(), "description": str(e.get("description", "")), "part": float(e.get("part") or 0),
-                       "modeles": [str(t) for t in e.get("modeles", [])]})
-    if sum(e["part"] for e in etapes) > 1.000001:
-        raise HTTPException(422, "Le total des parts de facturation dépasse 100 %")
+        etapes.append({"phase": str(e.get("phase") or "").strip(), "nom": str(e["nom"]).strip(), "description": str(e.get("description", "")),
+                       "facturation": _regle_valide(e), "modeles": [str(t) for t in e.get("modeles", [])]})
+    _controle_honoraires(etapes)
     r = _ref(session, "parcours_projet", "Parcours type des projets", outils.PARCOURS_DEFAUT)
     r.data = {"provisoire": body.provisoire, "etapes": etapes}
     r.updated_at = datetime.now(timezone.utc)
@@ -322,7 +379,10 @@ class ApercuBody(BaseModel):
 def _projet_exemple() -> Projet:
     return Projet(code="PRJ-2026-000", nom="Projet d'exemple", client_nom="Coopérative d'habitants Les Tilleuls",
                   client_adresse="12 rue des Lilas, 94310 Orly", client_siren="000 000 000", client_contact="Mme Exemple, présidente",
-                  montant_ht=24000, taux_tva=0.2, date_debut=date.today(),
+                  montant_ht=144_000, taux_tva=0.2, ca_previsionnel_ttc=4_800_000, taux_honoraires=0.03, date_debut=date.today(),
+                  tiers={"collectivite": {"nom": "Ville d'Orly", "adresse": "7 avenue Adrien-Raynal, 94310 Orly", "contact": "M. le Maire"},
+                         "promoteur": {"nom": "Promoteur Exemple SAS", "adresse": "1 rue de l'Exemple, 75000 Paris", "contact": "Directeur des programmes"},
+                         "financeur": {"nom": "CNAV"}},
                   etapes=[{**e, "id": str(i), "statut": "a_venir"} for i, e in enumerate(outils.PARCOURS_DEFAUT["etapes"])])
 
 
@@ -338,6 +398,55 @@ def _generer_pdf(session: Session, p: Projet, titre: str, contenu: str, etape: d
     ident = identite(session)
     valeurs = outils.valeurs_champs(p, ident, op, _noms(session).get(p.responsable, p.responsable), etape)
     return outils.document_pdf(titre, outils.remplir(contenu, valeurs), p, ident)
+
+
+# ─────────────────────────────────────────────── plans d'action et modélisation de la foncière
+STATUTS_ACTION = {"a_lancer", "en_cours", "fait"}
+
+
+@router.get("/plans-action")
+def lire_plans_action(session: Session = Depends(get_session), user: User | None = Depends(get_current_user)) -> dict:
+    _auth(user)
+    return _plans(session).data
+
+
+def _plans(session: Session) -> Referentiel:
+    defaut = {**outils.PLANS_ACTION_DEFAUT,
+              "actions": [{"id": uuid4().hex[:8], "statut": "a_lancer", "responsable": "", "echeance": None, "detail": "", **a}
+                          for a in outils.PLANS_ACTION_DEFAUT["actions"]]}
+    return _ref(session, "plans_action", "Plans d'action de la SCIC", defaut)
+
+
+@router.put("/plans-action")
+def enregistrer_plans_action(body: dict, session: Session = Depends(get_session), user: User = Depends(require_saisie)) -> dict:
+    actions = []
+    for a in body.get("actions") or []:
+        if not str(a.get("titre") or "").strip():
+            raise HTTPException(422, "Chaque action doit avoir un intitulé")
+        if (a.get("statut") or "a_lancer") not in STATUTS_ACTION:
+            raise HTTPException(422, f"Statut d'action inconnu : {a.get('statut')}")
+        actions.append({"id": a.get("id") or uuid4().hex[:8], "axe": str(a.get("axe") or "Divers").strip()[:60],
+                        "titre": str(a["titre"]).strip()[:200], "detail": str(a.get("detail") or "")[:1000],
+                        "statut": a.get("statut") or "a_lancer", "responsable": str(a.get("responsable") or ""),
+                        "echeance": a.get("echeance") or None})
+    f = body.get("fonciere") or {}
+    try:
+        fonciere = {"taux_fonds_propres": float(f.get("taux_fonds_propres") or 0), "cout_moyen_logement": float(f.get("cout_moyen_logement") or 0),
+                    "annees": [{"annee": int(x["annee"]), "idf_projets": int(x.get("idf_projets") or 0), "idf_logements": int(x.get("idf_logements") or 0),
+                                "idf_detail": str(x.get("idf_detail") or "")[:200], "hors_idf_projets": int(x.get("hors_idf_projets") or 0),
+                                "hors_idf_logements": int(x.get("hors_idf_logements") or 0)} for x in f.get("annees") or []]}
+    except (TypeError, ValueError, KeyError):
+        raise HTTPException(422, "Modélisation de la foncière : valeurs invalides")
+    if not 0 <= fonciere["taux_fonds_propres"] <= 1:
+        raise HTTPException(422, "Le taux de fonds propres doit être compris entre 0 et 100 %")
+    r = _plans(session)
+    r.data = {"actions": actions, "fonciere": fonciere}
+    r.updated_at = datetime.now(timezone.utc)
+    session.add(r)
+    session.add(AuditLog(action="plans_action_modification", target_type="referentiel", target_id=r.id, user=user.username,
+                         payload={"nb_actions": len(actions)}))
+    session.commit()
+    return r.data
 
 
 # ─────────────────────────────────────────────── projet (suite)
@@ -363,15 +472,20 @@ def modifier(pid: int, body: ProjetBody, session: Session = Depends(get_session)
             raise HTTPException(409, "Une étape déjà facturée ne peut pas être supprimée")
         anciennes = {e["id"]: e for e in p.etapes or []}
         for e in nouvelles:
-            if e["id"] in verrouillees and abs(e["part"] - float(anciennes[e["id"]].get("part") or 0)) > 1e-9:
-                raise HTTPException(409, f"L'étape « {e['nom']} » est déjà facturée : sa part ne peut plus changer")
+            if e["id"] in verrouillees and e["facturation"] != outils.regle(anciennes[e["id"]]):
+                raise HTTPException(409, f"L'étape « {e['nom']} » est déjà facturée : sa règle de facturation ne peut plus changer")
         p.etapes = nouvelles
-    if "montant_ht" in data and _factures_par_etape(session, p.id) and data["montant_ht"] != p.montant_ht:
-        if any(f.statut != "brouillon" for f in _factures_par_etape(session, p.id).values()):
-            raise HTTPException(409, "Des étapes sont déjà facturées : le montant des honoraires ne peut plus changer (établissez un avenant)")
+    if "tiers" in data:
+        data["tiers"] = {**(p.tiers or {}), **_tiers_valides(data["tiers"])}
+    verrouillees = {k for k, f in _factures_par_etape(session, p.id).items() if f.statut != "brouillon"}
+    avant = {e["id"]: outils.montant_etape(p, e) for e in p.etapes or [] if e["id"] in verrouillees}
     ancien_resp = p.responsable
     for k, v in data.items():
         setattr(p, k, v.strip() if isinstance(v, str) and k == "nom" else v)
+    _honoraires(p)
+    if any(abs(outils.montant_etape(p, e) - avant[e["id"]]) > 0.005 for e in p.etapes or [] if e["id"] in avant):
+        session.rollback()
+        raise HTTPException(409, "Des étapes sont déjà facturées : ces montants ne peuvent plus changer (établissez un avenant)")
     p.updated_at = datetime.now(timezone.utc)
     session.add(p)
     if p.responsable and p.responsable != ancien_resp:
@@ -427,14 +541,16 @@ def statut_etape(pid: int, eid: str, body: StatutEtapeBody, session: Session = D
         # l'étape suivante démarre
         if idx + 1 < len(etapes) and etapes[idx + 1]["statut"] == "a_venir":
             etapes[idx + 1]["statut"] = "en_cours"
-        montant = round(float(p.montant_ht or 0) * float(e.get("part") or 0), 2)
-        if montant > 0 and not existante:
-            lignes = [{"designation": f"{p.nom} — étape « {e['nom']} » ({outils.pct(float(e['part']))} des honoraires)",
+        regle = outils.regle(e)
+        montant = outils.montant_etape(p, e)
+        if montant > 0 and not existante and regle["nature"] == "facture":
+            payeur = outils.tiers(p, regle["payeur"])
+            lignes = [{"designation": f"{p.nom} — « {e['nom']} » ({outils.libelle_regle(regle).lower()})",
                        "quantite": 1, "prix_unitaire_ht": montant, "taux_tva": float(p.taux_tva or 0)}]
             ht, tva, ttc = outils.totaux(lignes)
-            facture = Facture(projet_id=p.id, etape_id=eid, client_nom=p.client_nom, client_adresse=p.client_adresse,
-                              client_siren=p.client_siren, objet=f"{p.code} — {p.nom} : {e['nom']}", lignes=lignes,
-                              total_ht=ht, total_tva=tva, total_ttc=ttc, cree_par=user.username)
+            facture = Facture(projet_id=p.id, etape_id=eid, client_nom=payeur["nom"] or f"[{outils.PAYEURS[regle['payeur']].lower()} à préciser]",
+                              client_adresse=payeur["adresse"], client_siren=payeur["siren"], objet=f"{p.code} — {p.nom} : {e['nom']}",
+                              lignes=lignes, total_ht=ht, total_tva=tva, total_ttc=ttc, cree_par=user.username)
             session.add(facture)
     p.etapes = etapes
     if all(x["statut"] == "terminee" for x in etapes) and p.statut == "en_cours":
@@ -451,7 +567,10 @@ def statut_etape(pid: int, eid: str, body: StatutEtapeBody, session: Session = D
                      type_notif="validation", url=f"/facturation?id={facture.id}", emise_par=user.username,
                      target_type="facture", target_id=facture.id)
     elif body.statut == "terminee" and p.responsable:
-        notifier(session, p.responsable, f"Étape terminée — {p.nom}", e["nom"], type_notif="info", url=f"/projets/{p.id}",
+        regle = outils.regle(e)
+        texte = (f"{e['nom']} : financement de {outils.eur(outils.montant_etape(p, e))} acquis ({outils.tiers(p, regle['payeur'])['nom'] or 'financeur'})."
+                 if regle["nature"] == "financement" and regle["mode"] != "aucune" else e["nom"])
+        notifier(session, p.responsable, f"Étape terminée — {p.nom}", texte, type_notif="info", url=f"/projets/{p.id}",
                  emise_par=user.username, target_type="projet", target_id=p.id)
     session.add(AuditLog(action="projet_etape", target_type="projet", target_id=p.id, user=user.username,
                          payload={"etape": e["nom"], "statut": body.statut, "facture_id": facture.id if facture else None}))

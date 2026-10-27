@@ -2,9 +2,6 @@ import type {
   Operation,
   Scenario,
   BilanResult,
-  Menage,
-  QualificationResult,
-  QualificationPreviewPayload,
   ExploitationResult,
 } from "./types";
 import type { SimData, SimResult, SimulationPayload } from "./simulateur";
@@ -146,18 +143,6 @@ export const api = {
   calculerExploitation: (scId: number) =>
     fetchJson<ExploitationResult>(`/api/calculs/exploitation/${scId}`, { method: "POST" }),
 
-  // M4
-  listMenages: (scId: number) => fetchJson<Menage[]>(`/api/menages/scenario/${scId}`),
-  getMenage: (id: number) => fetchJson<Menage>(`/api/menages/${id}`),
-  updateMenage: (id: number, data: Partial<Menage>) =>
-    fetchJson<Menage>(`/api/menages/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  calculerQualification: (menageId: number) =>
-    fetchJson<QualificationResult>(`/api/calculs/commercialisation/${menageId}`, { method: "POST" }),
-  previewQualification: (payload: QualificationPreviewPayload) =>
-    fetchJson<QualificationResult>(`/api/calculs/commercialisation/preview`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
   // M1 Référentiels DB
   listReferentiels: () =>
     fetchJson<{ id: number; code: string; label: string; data: Record<string, unknown>; updated_at: string }[]>(
@@ -218,21 +203,6 @@ export const api = {
     ),
   markNotifRead: (id: number) => fetchJson(`/api/notifications/${id}/read`, { method: "PUT" }),
   markAllNotifRead: () => fetchJson(`/api/notifications/mark-all-read`, { method: "PUT" }),
-
-  // Briefing podcast
-  generateBriefing: () =>
-    fetchJson<{ id: number; titre: string; script_texte: string; audio_path: string | null; duree_estimee_sec: number; jour: string; lu: boolean }>(
-      `/api/briefing/generer`,
-      { method: "POST" }
-    ),
-  getBriefingToday: () =>
-    fetchJson<{ id: number; titre: string; script_texte: string; audio_path: string | null; duree_estimee_sec: number; jour: string; lu: boolean } | null>(
-      `/api/briefing/aujourd-hui`
-    ),
-  listBriefings: (limit = 14) =>
-    fetchJson<{ id: number; titre: string; script_texte: string; audio_path: string | null; duree_estimee_sec: number; jour: string; lu: boolean }[]>(
-      `/api/briefing/historique?limit=${limit}`
-    ),
 
   // Attachments
   listAttachments: (parentType: string, parentId: number) =>

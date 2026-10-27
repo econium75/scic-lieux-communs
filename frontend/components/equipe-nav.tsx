@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, ClipboardList, FolderOpen, Mic, UserCog } from "lucide-react";
+import { Calendar, ClipboardList, FolderOpen, UserCog } from "lucide-react";
 import { collab, type Compteurs } from "@/lib/collab";
 import { getUser } from "@/lib/auth";
 import { cn } from "@/lib/format";
@@ -30,7 +30,6 @@ export function EquipeNav({ dense = false }: { dense?: boolean }) {
     { href: "/taches", label: "Mes tâches", icon: ClipboardList, badge: c?.a_faire || 0, alerte: (c?.en_retard || 0) > 0 },
     { href: "/documents", label: "Porte-documents", icon: FolderOpen, badge: c?.a_signer || 0, alerte: false },
     { href: "/agenda", label: "Agenda partagé", icon: Calendar, badge: 0, alerte: false },
-    { href: "/briefing", label: "Briefing podcast", icon: Mic, badge: 0, alerte: false },
     { href: "/admin/users", label: "Utilisateurs", icon: UserCog, badge: 0, alerte: false },
   ];
 

@@ -1,11 +1,12 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Eye, Plus, Save, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, Eye, Plus, Save, Trash2, X } from "lucide-react";
 import { Bouton, champ, champCourt, etiquette } from "@/components/collab/modal";
 import { getToken, getUser } from "@/lib/auth";
 import { cn } from "@/lib/format";
-import { projets, type Champ, type Identite, type Modele, type Parcours } from "@/lib/projets";
+import { EditeurRegle } from "@/components/regle-facturation";
+import { REGLE_VIDE, projets, type Champ, type EtapeParcours, type Identite, type Modele, type Parcours } from "@/lib/projets";
 
 type Onglet = "parcours" | "modeles" | "identite";
 
@@ -57,11 +58,20 @@ function EditeurParcours({ dire }: { dire: Dire }) {
     projets.modeles().then((r) => setModeles(r.modeles)).catch(() => {});
   }, [dire]);
   if (!p) return <div className="text-sm text-ink-500">Chargement…</div>;
-  const total = p.etapes.reduce((a, e) => a + (Number(e.part) || 0), 0);
-  const maj = (i: number, patch: Partial<Parcours["etapes"][number]>) => setP({ ...p, etapes: p.etapes.map((e, j) => (j === i ? { ...e, ...patch } : e)) });
+  const etapes = p.etapes.map((e) => ({ ...e, phase: e.phase || "", facturation: e.facturation || { ...REGLE_VIDE } }));
+  const honoraires = etapes.reduce((a, e) => a + (e.facturation.mode === "pourcentage" && e.facturation.base === "honoraires" && e.facturation.nature === "facture" ? e.facturation.taux : 0), 0);
+  const phases = Array.from(new Set(etapes.map((e) => e.phase).filter(Boolean)));
+  const maj = (i: number, patch: Partial<EtapeParcours>) => setP({ ...p, etapes: etapes.map((e, j) => (j === i ? { ...e, ...patch } : e)) });
+  const deplacer = (i: number, d: number) => {
+    const j = i + d;
+    if (j < 0 || j >= etapes.length) return;
+    const x = [...etapes];
+    [x[i], x[j]] = [x[j], x[i]];
+    setP({ ...p, etapes: x });
+  };
   const enregistrer = async () => {
     try {
-      setP(await projets.enregistrerParcours({ ...p, provisoire: false }));
+      setP(await projets.enregistrerParcours({ ...p, etapes, provisoire: false }));
       dire(true, "Parcours type enregistré : il s'appliquera aux prochains projets.");
     } catch (e) {
       dire(false, String((e as Error).message || e));
@@ -74,36 +84,46 @@ function EditeurParcours({ dire }: { dire: Dire }) {
           Parcours provisoire : remplacez-le par les étapes définies par la SCIC, puis enregistrez.
         </div>
       )}
-      <ol className="divide-y divide-paper-200">
-        {p.etapes.map((e, i) => (
-          <li key={i} className="px-5 py-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-ink-500 w-5">{i + 1}.</span>
-              <input aria-label="Nom de l'étape" className={cn(champ, "flex-1 min-w-0")} value={e.nom} onChange={(x) => maj(i, { nom: x.target.value })} />
-              <input aria-label="Part des honoraires (%)" className={cn(champCourt, "w-20 shrink-0 text-right")} inputMode="decimal"
-                value={String(Math.round((Number(e.part) || 0) * 10000) / 100).replace(".", ",")}
-                onChange={(x) => maj(i, { part: (Number(x.target.value.replace(",", ".")) || 0) / 100 })} />
-              <span className="text-xs text-ink-500">%</span>
-              <button onClick={() => setP({ ...p, etapes: p.etapes.filter((_, j) => j !== i) })} className="p-1 text-ink-500 hover:text-danger-500" aria-label="Supprimer l'étape"><Trash2 size={14} /></button>
-            </div>
-            <input aria-label="Description" placeholder="Description (facultatif)" className={cn(champ, "ml-7 w-[calc(100%-1.75rem)]")} value={e.description || ""} onChange={(x) => maj(i, { description: x.target.value })} />
-            <div className="ml-7 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-700">
-              <span className="text-ink-500">Documents à générer :</span>
-              {modeles.map((m) => (
-                <label key={m.id} className="inline-flex items-center gap-1">
-                  <input type="checkbox" checked={e.modeles.includes(m.titre)}
-                    onChange={(x) => maj(i, { modeles: x.target.checked ? [...e.modeles, m.titre] : e.modeles.filter((t) => t !== m.titre) })} />
-                  {m.titre}
-                </label>
-              ))}
+      <ol>
+        {etapes.map((e, i) => (
+          <li key={i}>
+            {(i === 0 || etapes[i - 1].phase !== e.phase) && e.phase && (
+              <div className="px-5 py-2 bg-paper-50 border-t border-paper-200 text-[11px] uppercase tracking-widest text-ink-700 font-medium">
+                Phase {phases.indexOf(e.phase) + 1} · {e.phase}
+              </div>
+            )}
+            <div className="px-5 py-3 space-y-2 border-t border-paper-200">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-ink-500 w-5">{i + 1}.</span>
+                <input aria-label="Nom de l'étape" className={cn(champ, "flex-1 min-w-0")} value={e.nom} onChange={(x) => maj(i, { nom: x.target.value })} />
+                <input aria-label="Phase" list="phases-parcours" className={cn(champCourt, "w-56 shrink-0")} value={e.phase} onChange={(x) => maj(i, { phase: x.target.value })} />
+                <button onClick={() => deplacer(i, -1)} className="p-1 text-ink-500 hover:text-ink-900" aria-label="Monter"><ArrowUp size={14} /></button>
+                <button onClick={() => deplacer(i, 1)} className="p-1 text-ink-500 hover:text-ink-900" aria-label="Descendre"><ArrowDown size={14} /></button>
+                <button onClick={() => setP({ ...p, etapes: etapes.filter((_, j) => j !== i) })} className="p-1 text-ink-500 hover:text-danger-500" aria-label="Supprimer l'étape"><Trash2 size={14} /></button>
+              </div>
+              <input aria-label="Description" placeholder="Description (facultatif)" className={cn(champ, "ml-7 w-[calc(100%-1.75rem)]")} value={e.description || ""} onChange={(x) => maj(i, { description: x.target.value })} />
+              <div className="ml-7"><EditeurRegle r={e.facturation} onChange={(r) => maj(i, { facturation: r })} /></div>
+              <div className="ml-7 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-700">
+                <span className="text-ink-500">Documents à générer :</span>
+                {modeles.map((m) => (
+                  <label key={m.id} className="inline-flex items-center gap-1">
+                    <input type="checkbox" checked={e.modeles.includes(m.titre)}
+                      onChange={(x) => maj(i, { modeles: x.target.checked ? [...e.modeles, m.titre] : e.modeles.filter((t) => t !== m.titre) })} />
+                    {m.titre}
+                  </label>
+                ))}
+              </div>
             </div>
           </li>
         ))}
       </ol>
+      <datalist id="phases-parcours">{phases.map((x) => <option key={x} value={x} />)}</datalist>
       <div className="px-5 py-3 border-t border-paper-200 flex flex-wrap items-center gap-3">
-        <Bouton onClick={() => setP({ ...p, etapes: [...p.etapes, { nom: "Nouvelle étape", description: "", part: 0, modeles: [] }] })}><Plus size={12} /> Ajouter une étape</Bouton>
-        <span className={cn("text-xs tabular-nums", Math.abs(total - 1) > 0.0001 ? "text-warn-500" : "text-ok-500")}>
-          Total facturé : {String(Math.round(total * 10000) / 100).replace(".", ",")} % des honoraires
+        <Bouton onClick={() => setP({ ...p, etapes: [...etapes, { phase: etapes[etapes.length - 1]?.phase || "", nom: "Nouvelle étape", description: "", facturation: { ...REGLE_VIDE }, modeles: [] }] })}>
+          <Plus size={12} /> Ajouter une étape
+        </Bouton>
+        <span className={cn("text-xs tabular-nums", Math.abs(honoraires - 1) > 0.0001 ? "text-warn-500" : "text-ok-500")}>
+          Honoraires échelonnés : {String(Math.round(honoraires * 10000) / 100).replace(".", ",")} % du contrat
         </span>
         <span className="ml-auto"><Bouton onClick={enregistrer} variante="primaire"><Save size={12} /> Enregistrer le parcours</Bouton></span>
       </div>
@@ -131,7 +151,7 @@ function EditeurModeles({ dire }: { dire: Dire }) {
   const inserer = (cle: string) => {
     if (!sel) return;
     const t = zone.current;
-    const ajout = cle === "echeancier" || cle === "signatures" ? `\n{{${cle}}}\n` : `{{${cle}}}`;
+    const ajout = cle === "echeancier" || cle.startsWith("signatures") ? `\n{{${cle}}}\n` : `{{${cle}}}`;
     const pos = t ? t.selectionStart : sel.contenu.length;
     const contenu = sel.contenu.slice(0, pos) + ajout + sel.contenu.slice(pos);
     setSel({ ...sel, contenu });

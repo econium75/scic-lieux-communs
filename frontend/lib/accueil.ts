@@ -71,7 +71,6 @@ export type MaJourneeData = {
     autofinancement_a1: number | null;
   }[];
   activite: { id: number; at: string; user: string; texte: string; url: string | null }[];
-  briefing: { id: number; titre: string } | null;
 };
 
 export const accueil = {

@@ -19,8 +19,8 @@ async def import_menages_excel(
     session: Session = Depends(get_session),
     user: User = Depends(require_saisie),
 ) -> dict:
-    """Importe un fichier Excel contenant une liste de ménages (format colonnes:
-    reference | typologie | nb_personnes | nb_enfants | revenu_fiscal_annuel | apport | prestations_mensuelles).
+    """Importe une liste de ménages candidats (première ligne = en-têtes) :
+    reference | typologie | adultes | enfants | rfr_n2 | revenu_disponible_annuel | revenus_nets_mensuels | credits_mensuels | apport.
     """
     sc = session.get(Scenario, scenario_id)
     if not sc:
@@ -34,39 +34,47 @@ async def import_menages_excel(
         raise HTTPException(400, f"Fichier Excel illisible : {e}")
 
     headers = [str(c).strip().lower() if c else "" for c in next(ws.iter_rows(min_row=1, max_row=1, values_only=True))]
-    # Mapping tolérant
-    def col(name_variants: list[str]) -> int | None:
-        for v in name_variants:
-            if v in headers:
-                return headers.index(v)
-        return None
 
-    c_ref = col(["reference", "référence", "ref"])
-    c_typo = col(["typologie", "typo", "logement"])
-    c_nb_p = col(["nb_personnes", "personnes", "nb personnes"])
-    c_nb_e = col(["nb_enfants", "enfants", "nb enfants"])
-    c_rev = col(["revenu_fiscal_annuel", "revenu", "revenu annuel", "rfr"])
-    c_apport = col(["apport"])
-    c_prest = col(["prestations_mensuelles", "prestations", "caf", "prestations_sociales_mensuelles"])
+    def col(variantes: list[str]) -> int | None:
+        return next((headers.index(v) for v in variantes if v in headers), None)
 
-    if c_ref is None or c_typo is None:
+    colonnes = {
+        "reference": col(["reference", "référence", "ref", "réf."]),
+        "typologie": col(["typologie", "typo", "logement"]),
+        "adultes": col(["adultes", "nb_adultes"]),
+        "enfants": col(["enfants", "nb_enfants", "enfants_moins_14"]),
+        "rfr": col(["rfr_n2", "rfr", "revenu_fiscal_annuel", "revenu fiscal de référence"]),
+        "dispo": col(["revenu_disponible_annuel", "revenu disponible", "revenu_disponible"]),
+        "nets": col(["revenus_nets_mensuels", "revenus nets mensuels", "revenus_nets"]),
+        "credits": col(["credits_mensuels", "crédits", "credits"]),
+        "apport": col(["apport"]),
+        "personnes": col(["nb_personnes", "personnes"]),
+    }
+    if colonnes["reference"] is None or colonnes["typologie"] is None:
         raise HTTPException(400, "Colonnes 'reference' et 'typologie' obligatoires")
+
+    def val(row, cle, defaut=0.0):
+        i = colonnes[cle]
+        return row[i] if i is not None and i < len(row) and row[i] not in (None, "") else defaut
 
     created = []
     errors = []
     for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-        if not row or row[c_ref] is None:
+        if not row or val(row, "reference", None) is None:
             continue
         try:
+            enfants = int(val(row, "enfants", 0))
+            adultes = int(val(row, "adultes", 0)) or max(int(val(row, "personnes", 1)) - enfants, 1)
             m = Menage(
                 scenario_id=scenario_id,
-                reference=str(row[c_ref]),
-                typologie_logement=str(row[c_typo] or "T3"),
-                nb_personnes=int(row[c_nb_p] or 1) if c_nb_p is not None else 1,
-                nb_enfants=int(row[c_nb_e] or 0) if c_nb_e is not None else 0,
-                revenu_fiscal_annuel=float(row[c_rev] or 0) if c_rev is not None else 0,
-                apport=float(row[c_apport] or 0) if c_apport is not None else 0,
-                prestations_sociales_mensuelles=float(row[c_prest] or 0) if c_prest is not None else 0,
+                reference=str(val(row, "reference")),
+                typologie_logement=str(val(row, "typologie", "T3")),
+                adultes=adultes, nb_enfants=enfants, nb_personnes=adultes + enfants,
+                revenu_fiscal_annuel=float(val(row, "rfr")),
+                revenu_disponible_annuel=float(val(row, "dispo")),
+                revenus_nets_mensuels=float(val(row, "nets")),
+                credits_mensuels=float(val(row, "credits")),
+                apport=float(val(row, "apport")),
             )
             session.add(m)
             created.append(m.reference)
@@ -280,12 +288,13 @@ def menages_template():
     wb = Workbook()
     ws = wb.active
     ws.title = "Ménages"
-    ws.append(["reference", "typologie", "nb_personnes", "nb_enfants", "revenu_fiscal_annuel", "apport", "prestations_mensuelles"])
-    ws.append(["M-100", "T3", 3, 1, 36000, 25000, 400])
-    ws.append(["M-101", "T2", 1, 0, 24000, 10000, 150])
-    ws.append(["M-102", "T4", 5, 3, 48000, 15000, 600])
-    for col in "ABCDEFG":
-        ws.column_dimensions[col].width = 22
+    ws.append(["reference", "typologie", "adultes", "enfants", "rfr_n2", "revenu_disponible_annuel",
+               "revenus_nets_mensuels", "credits_mensuels", "apport"])
+    ws.append(["M-100", "T3", 2, 1, 42000, 38000, 3200, 0, 15000])
+    ws.append(["M-101", "T2", 1, 0, 24000, 22000, 1850, 0, 10000])
+    ws.append(["M-102", "T4", 2, 3, 52000, 47000, 4100, 250, 20000])
+    for col in "ABCDEFGHI":
+        ws.column_dimensions[col].width = 24
     buf = BytesIO()
     wb.save(buf)
     buf.seek(0)

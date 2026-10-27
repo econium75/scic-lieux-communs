@@ -8,7 +8,7 @@ from ..auth import get_current_user
 from ..db import get_session
 from ..engines.simulateur import calculer
 from ..models import (
-    AuditLog, Briefing, Document, EventAgenda, Operation, Phase, Simulation, Tache, TacheProjet, User,
+    AuditLog, Document, EventAgenda, Operation, Phase, Simulation, Tache, TacheProjet, User,
 )
 from .documents import peut_lire
 from .projet import planning
@@ -162,8 +162,6 @@ def ma_journee(session: Session = Depends(get_session), user: User | None = Depe
         })
     jalons.sort(key=lambda j: j["date"])
 
-    briefing = session.exec(select(Briefing).where(Briefing.destinataire == user.username)
-                            .where(Briefing.jour == auj.isoformat())).first()
     a_signer = sum(1 for x in a_faire if x["kind"] == "tache" and x["type"] == "signature")
     envoyees = len(session.exec(select(Tache).where(Tache.emetteur == user.username).where(Tache.statut == "a_faire")).all())
     return {
@@ -183,5 +181,4 @@ def ma_journee(session: Session = Depends(get_session), user: User | None = Depe
         "jalons": jalons,
         "operations": cartes,
         "activite": _activite(session, user, noms),
-        "briefing": {"id": briefing.id, "titre": briefing.titre} if briefing else None,
     }

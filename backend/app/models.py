@@ -51,23 +51,36 @@ class Simulation(SQLModel, table=True):
 
 
 class Menage(SQLModel, table=True):
-    """Ménage candidat à l'accession BRS (M4)."""
+    """Ménage candidat à l'accession BRS (simulation selon le classeur « Simulation BRS » de la SCIC)."""
     id: Optional[int] = Field(default=None, primary_key=True)
     scenario_id: int = Field(foreign_key="scenario.id", index=True)
     reference: str
     typologie_logement: str = Field(default="T3")
 
-    # Composition
-    nb_personnes: int = 1
-    nb_enfants: int = 0  # legacy, voir composition_json pour détail
+    # Composition : adultes (≥ 14 ans, demandeur compris) et enfants de moins de 14 ans
+    adultes: int = 1
+    nb_enfants: int = 0
+    nb_personnes: int = 1  # adultes + enfants, tenu à jour à l'enregistrement
 
-    # Finances
-    revenu_fiscal_annuel: float = 0.0
+    # Ressources
+    revenu_fiscal_annuel: float = 0.0  # revenu fiscal de référence N-2 (éligibilité)
+    revenu_disponible_annuel: float = 0.0  # pour le classement par décile
+    revenus_nets_mensuels: float = 0.0  # pour le taux d'effort
+    credits_mensuels: float = 0.0  # charges de crédit en cours
     apport: float = 0.0
-    prestations_sociales_mensuelles: float = 0.0
+    prestations_sociales_mensuelles: float = 0.0  # ancien modèle, non utilisé
 
-    # Résultat M4 (JSON lourd)
-    qualification: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    qualification: Optional[dict] = Field(default=None, sa_column=Column(JSON))  # ancien modèle, non utilisé
+    notes: str = Field(default="")
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
+class HypothesesBRS(SQLModel, table=True):
+    """Hypothèses de commercialisation BRS d'un scénario : typologies, paramètres financiers, plafonds, déciles."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    scenario_id: int = Field(foreign_key="scenario.id", index=True, unique=True)
+    data: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    updated_by: str = Field(default="")
     updated_at: datetime = Field(default_factory=_utcnow)
 
 
@@ -262,19 +275,6 @@ class TacheProjet(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=_utcnow)
 
 
-class Briefing(SQLModel, table=True):
-    """Briefing quotidien personnalisé (texte + lien audio)."""
-    id: Optional[int] = Field(default=None, primary_key=True)
-    destinataire: str = Field(index=True)  # username
-    jour: str = Field(index=True)  # YYYY-MM-DD
-    titre: str
-    script_texte: str
-    audio_path: Optional[str] = None  # chemin relatif sous data/briefings/
-    duree_estimee_sec: int = Field(default=0)
-    created_at: datetime = Field(default_factory=_utcnow)
-    lu: bool = Field(default=False)
-
-
 class Projet(SQLModel, table=True):
     """Projet accompagné par la SCIC : parcours d'étapes, contrats et conventions générés, facturation à l'avancement."""
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -287,12 +287,16 @@ class Projet(SQLModel, table=True):
     client_email: str = Field(default="")
     operation_id: Optional[int] = Field(default=None, foreign_key="operation.id", index=True)
     responsable: str = Field(default="")  # username
-    montant_ht: float = Field(default=0.0)  # honoraires de la mission
+    montant_ht: float = Field(default=0.0)  # honoraires de la mission (= CA prévisionnel TTC × taux d'honoraires quand le CA est saisi)
     taux_tva: float = Field(default=0.20)
+    ca_previsionnel_ttc: float = Field(default=0.0)  # chiffre d'affaires prévisionnel TTC de l'opération (prix de vente total)
+    taux_honoraires: float = Field(default=0.03)  # contrat d'honoraires : part du prix de vente TTC
+    # Autres parties : {"collectivite"|"promoteur"|"financeur": {nom, adresse, siren, contact, email}}
+    tiers: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     statut: str = Field(default="en_cours")  # en_cours | termine | suspendu | abandonne
     date_debut: Optional[date] = None
-    # [{id, nom, description, part (0-1), statut: a_venir|en_cours|terminee, date_prevue, date_realisation,
-    #   modeles: [ids ModeleDocument], documents: [ids Document]}]
+    # [{id, phase, nom, description, facturation: {mode, montant, taux, base, payeur, nature}, statut: a_venir|en_cours|terminee,
+    #   date_prevue, date_realisation, modeles: [ids ModeleDocument]}] — les anciennes étapes ont une « part » des honoraires
     etapes: list = Field(default_factory=list, sa_column=Column(JSON))
     # Documents générés depuis les modèles : [{document_id, modele_id, etape_id, titre, par, at}]
     documents: list = Field(default_factory=list, sa_column=Column(JSON))
